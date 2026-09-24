@@ -108,16 +108,104 @@ function renderSubject(containerId,course,label,sets,ctx){
   el.innerHTML='<div class="course-assignments"><div class="assignment-section-title">Upcoming</div>'+(upcoming.length?upcoming.map(x=>assignmentRow(x,'upcoming',ctx)).join(''):'<span class="small">No upcoming '+label+' assignments.</span>')+'<details class="folder"><summary>Completed ('+completed.length+')</summary><div class="folder-body">'+(completed.length?completed.map(x=>assignmentRow(x,'completed',ctx)).join(''):'<span class="small">No completed '+label+' assignments.</span>')+'</div></details><details class="folder"><summary>Past Assignments ('+past.length+')</summary><div class="folder-body">'+(past.length?past.map(x=>assignmentRow(x,'past',ctx)).join(''):'<span class="small">No past-due '+label+' assignments.</span>')+'</div></details></div>'
 }
 function render(){
-  $('date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
-  const doneTasks=T.filter(x=>x.done).length,taskPct=T.length?Math.round(doneTasks/T.length*100):0;
-  $('ptext').textContent=doneTasks+' of '+T.length+' tasks completed';$('ppct').textContent=taskPct+'%';$('pbar').style.width=taskPct+'%';$('stime').textContent=fmt(T.filter(x=>x.done).reduce((s,x)=>s+Number(x.minutes||0),0));$('dsoon').textContent=A.filter(x=>!x.done&&new Date(x.due)>=new Date()&&new Date(x.due)<=new Date(Date.now()+7*86400000)).length;
-  $('tasks').innerHTML=T.length?T.map(x=>'<div class="item row"><button class="check '+(x.done?'on':'')+'" onclick="toggleT(\''+x.id+'\')">'+(x.done?'✓':'')+'</button><div style="flex:1"><h3 style="'+(x.done?'text-decoration:line-through;opacity:.55':'')+'">'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>').join(''):'<span class="small">No shared study tasks yet.</span>';
-  const now=new Date(),ctx=priorityContext(),future=A.filter(x=>!x.done&&new Date(x.due)>=now),past=A.filter(x=>!x.done&&new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due)),completed=A.filter(x=>x.done).sort((a,b)=>new Date(b.due)-new Date(a.due));
+  const now=new Date();
+  $('date').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const sameDay=(a,b)=>a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate();
+  const ctx=priorityContext();
+
+  const todaysAssignments=A
+    .filter(x=>!x.done&&sameDay(new Date(x.due),now))
+    .sort((a,b)=>new Date(a.due)-new Date(b.due));
+  const todaysTasks=T.filter(x=>!x.done);
+  $('todayCount').textContent=(todaysAssignments.length+todaysTasks.length)+' to do';
+  $('todayAssignments').innerHTML=todaysAssignments.length
+    ?todaysAssignments.map(x=>assignmentRow(x,'upcoming',ctx)).join('')
+    :'<div class="empty-state">No assignments are due today.</div>';
+  $('tasks').innerHTML=todaysTasks.length
+    ?todaysTasks.map(x=>'<div class="item row"><button class="check" onclick="toggleT(\''+x.id+'\')"></button><div style="flex:1"><h3>'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>').join('')
+    :'<div class="empty-state">No study tasks left for today.</div>';
+
+  const future=A.filter(x=>!x.done&&new Date(x.due)>=now);
+  const past=A.filter(x=>!x.done&&new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due));
+  const completed=A.filter(x=>x.done).sort((a,b)=>new Date(b.due)-new Date(a.due));
   future.sort((a,b)=>priorityInfo(a,ctx).rank-priorityInfo(b,ctx).rank||new Date(a.due)-new Date(b.due));
-  $('acount').textContent=future.length+' upcoming';$('upcomingList').innerHTML=future.length?future.map(x=>assignmentRow(x,'upcoming',ctx)).join(''):'<span class="small">No upcoming assignments.</span>';$('completedSummary').textContent='Completed ('+completed.length+')';$('completedList').innerHTML=completed.length?completed.map(x=>assignmentRow(x,'completed',ctx)).join(''):'<span class="small">No completed assignments yet.</span>';$('pastSummary').textContent='Past Assignments ('+past.length+')';$('pastList').innerHTML=past.length?past.map(x=>assignmentRow(x,'past',ctx)).join(''):'<span class="small">No past-due assignments.</span>';
-  const sets={future,past,completed};renderSubject('ecoSubjectAssignments',ECO2210,'ECO',sets,ctx);renderSubject('engSubjectAssignments',ENG2211,'ENG',sets,ctx);renderSubject('mktSubjectAssignments',MKT2000,'MKT',sets,ctx);renderSubject('bioSubjectAssignments',BIO,'BIO',sets,ctx);
-  $('glist').innerHTML=G.length?G.map(x=>{const q=Math.min(100,Math.round(Number(x.done||0)/Number(x.target||1)*100));return '<div class="item"><div class="between"><h3>'+esc(x.title)+'</h3><b>'+q+'%</b></div><div class="progress"><span style="width:'+q+'%"></span></div><div class="between" style="margin-top:9px"><span class="small">'+fmt(Number(x.done||0))+' / '+fmt(Number(x.target||0))+'</span><span><button onclick="gm(\''+x.id+'\',-30)">−30m</button> <button onclick="gm(\''+x.id+'\',30)">+30m</button> <button class="icon edit" onclick="editG(\''+x.id+'\')">✎</button> <button class="icon danger" onclick="delG(\''+x.id+'\')">⌫</button></span></div></div>'}).join(''):'<span class="small">No shared goals yet.</span>';
-  $('rtasks').textContent=doneTasks;$('rassign').textContent=completed.length;$('rbar').style.width=taskPct+'%';$('rtext').textContent=taskPct+'% of your current study tasks are complete.'
+
+  $('acount').textContent=future.length+' upcoming';
+  $('upcomingList').innerHTML=future.length
+    ?future.map(x=>assignmentRow(x,'upcoming',ctx)).join('')
+    :'<span class="small">No upcoming assignments.</span>';
+  $('completedSummary').textContent='Completed ('+completed.length+')';
+  $('completedList').innerHTML=completed.length
+    ?completed.map(x=>assignmentRow(x,'completed',ctx)).join('')
+    :'<span class="small">No completed assignments yet.</span>';
+  $('pastSummary').textContent='Past Assignments ('+past.length+')';
+  $('pastList').innerHTML=past.length
+    ?past.map(x=>assignmentRow(x,'past',ctx)).join('')
+    :'<span class="small">No past-due assignments.</span>';
+
+  const sets={future,past,completed};
+  renderSubject('ecoSubjectAssignments',ECO2210,'ECO',sets,ctx);
+  renderSubject('engSubjectAssignments',ENG2211,'ENG',sets,ctx);
+  renderSubject('mktSubjectAssignments',MKT2000,'MKT',sets,ctx);
+  renderSubject('bioSubjectAssignments',BIO,'BIO',sets,ctx);
+
+  const courseDefs=[
+    {course:ECO2210,name:'ECO 2210',detail:'Principles of Macroeconomics'},
+    {course:ENG2211,name:'ENG 2211',detail:'Business Communication'},
+    {course:MKT2000,name:'MKT 2000',detail:'Marketing Management'},
+    {course:BIO,name:'BIO',detail:'Biology'}
+  ];
+
+  const attention=courseDefs.map(c=>{
+    const all=A.filter(x=>x.course===c.course);
+    const pending=all.filter(x=>!x.done);
+    const overdue=pending.filter(x=>new Date(x.due)<now);
+    const upcoming=pending.filter(x=>new Date(x.due)>=now).sort((a,b)=>new Date(a.due)-new Date(b.due));
+    const within=(days)=>upcoming.filter(x=>(new Date(x.due)-now)/86400000<=days).length;
+    const d3=within(3),d7=within(7),d14=within(14);
+    const score=overdue.length*5+d3*3+Math.max(0,d7-d3)*2+Math.max(0,d14-d7);
+    const next=pending.slice().sort((a,b)=>new Date(a.due)-new Date(b.due))[0]||null;
+    let label='On track',cls='attention-good';
+    if(score>=10){label='Immediate attention';cls='attention-critical'}
+    else if(score>=5){label='High attention';cls='attention-high'}
+    else if(score>=2){label='Watch closely';cls='attention-watch'}
+    else if(!pending.length&&all.length){label='All caught up';cls='attention-good'}
+    else if(!all.length){label='No assignments yet';cls='attention-good'}
+    return {...c,all,pending,overdue,score,next,label,cls};
+  }).sort((a,b)=>b.score-a.score||b.overdue.length-a.overdue.length||a.name.localeCompare(b.name));
+
+  $('attentionList').innerHTML=attention.map(c=>{
+    const nextText=c.next
+      ?((new Date(c.next.due)<now?'Oldest pending: ':'Next due: ')+new Date(c.next.due).toLocaleDateString(undefined,{month:'short',day:'numeric'}))
+      :'No pending assignments';
+    return '<div class="attention-card"><div class="attention-top"><div><h3>'+esc(c.name)+'</h3><div class="small">'+esc(c.detail)+'</div></div><span class="attention-pill '+c.cls+'">'+c.label+'</span></div>'+
+      '<div class="report-meta"><span>'+c.overdue.length+' overdue</span><span>'+c.pending.length+' pending</span><span>'+esc(nextText)+'</span></div></div>';
+  }).join('');
+
+  $('glist').innerHTML=G.length?G.map(x=>{
+    const q=Math.min(100,Math.round(Number(x.done||0)/Number(x.target||1)*100));
+    return '<div class="item"><div class="between"><h3>'+esc(x.title)+'</h3><b>'+q+'%</b></div><div class="progress"><span style="width:'+q+'%"></span></div><div class="between" style="margin-top:9px"><span class="small">'+fmt(Number(x.done||0))+' / '+fmt(Number(x.target||0))+'</span><span><button onclick="gm(\''+x.id+'\',-30)">−30m</button> <button onclick="gm(\''+x.id+'\',30)">+30m</button> <button class="icon edit" onclick="editG(\''+x.id+'\')">✎</button> <button class="icon danger" onclick="delG(\''+x.id+'\')">⌫</button></span></div></div>'
+  }).join(''):'<div class="empty-state">No study goals yet.</div>';
+
+  const doneTasks=T.filter(x=>x.done).length;
+  const assignmentPct=A.length?Math.round(completed.length/A.length*100):0;
+  $('rtasks').textContent=doneTasks+' / '+T.length;
+  $('rassign').textContent=completed.length+' / '+A.length;
+  $('rcompletion').textContent=assignmentPct+'%';
+  $('roverdue').textContent=past.length;
+  $('rbar').style.width=assignmentPct+'%';
+  $('rtext').textContent=completed.length+' of '+A.length+' assignments completed • '+past.length+' overdue.';
+
+  $('reportSubjects').innerHTML=courseDefs.map(c=>{
+    const items=A.filter(x=>x.course===c.course);
+    const done=items.filter(x=>x.done).length;
+    const overdue=items.filter(x=>!x.done&&new Date(x.due)<now).length;
+    const pending=items.filter(x=>!x.done).length;
+    const pct=items.length?Math.round(done/items.length*100):0;
+    return '<div class="report-course"><div class="between"><div><h3>'+esc(c.name)+'</h3><div class="small">'+esc(c.detail)+'</div></div><b>'+pct+'%</b></div>'+
+      '<div class="progress" style="margin-top:9px"><span style="width:'+pct+'%"></span></div>'+
+      '<div class="report-meta"><span>'+done+' completed</span><span>'+pending+' pending</span><span>'+overdue+' overdue</span></div></div>';
+  }).join('');
 }
 async function toggleA(id){const x=A.find(v=>v.id===id);if(x)await mutate('app_set_assignment_done',{p_id:id,p_done:!x.done},{action:!x.done?'assignment_completed':'assignment_reopened',entityType:'assignment',entityId:id,summary:x.title})}
 async function delA(id){const x=A.find(v=>v.id===id);if(confirm('Delete this assignment for everyone?'))await mutate('app_delete_assignment',{p_id:id},{action:'assignment_deleted',entityType:'assignment',entityId:id,summary:x?x.title:'Assignment'})}
@@ -169,8 +257,18 @@ async function loadAdmin(){
     $('adminError').textContent=e.message&&/admin code/i.test(e.message)?'Incorrect admin code.':'Could not load admin activity.'
   }
 }
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('activeTab'));b.classList.add('activeTab');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.v).classList.add('active')});
-$('fab').onclick=()=>openForm($('assignments').classList.contains('active')?'assignment':'task');
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('nav button').forEach(x=>x.classList.remove('activeTab'));
+  b.classList.add('activeTab');
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  $(b.dataset.v).classList.add('active');
+  $('fab').hidden=b.dataset.v==='reports';
+});
+$('fab').onclick=()=>{
+  if($('assignments').classList.contains('active'))openForm('assignment');
+  else if($('goals').classList.contains('active'))openForm('goal');
+  else openForm('task');
+};
 $('inviteButton').onclick=()=>joinWithCode($('inviteInput').value);
 $('inviteInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWithCode($('inviteInput').value)});
 loadCached();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
