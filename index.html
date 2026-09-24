@@ -60,6 +60,27 @@ const K={a:"sf.a",t:"sf.t",g:"sf.g"},get=(k,d)=>{try{return JSON.parse(localStor
 let A=get(K.a,[{id:id(),title:"Elasticity homework",course:"Economics",due:new Date(Date.now()+86400000).toISOString(),done:false},{id:id(),title:"Job costing worksheet",course:"Accounting",due:new Date(Date.now()+3*86400000).toISOString(),done:false}]);
 let T=get(K.t,[{id:id(),title:"Review supply & demand graphs",course:"Economics",minutes:35,done:false},{id:id(),title:"Practice elasticity calculations",course:"Economics",minutes:45,done:false}]);
 let G=get(K.g,[{id:id(),title:"Study 15 hours this week",target:900,done:360}]);
+const ECO2210="ECO 2210 - Principles of Macroeconomics (SHO1C)";
+const ecoAssignments=[
+  {title:"Exam 1",due:"2026-09-13T23:59:00"},
+  {title:"Journal Essay 1",due:"2026-09-19T23:59:00"},
+  {title:"APPLY Gross Domestic Product Digital Interactive",due:"2026-09-19T23:59:00"},
+  {title:"ASSESS Chapter 5 Homework",due:"2026-09-19T23:59:00"},
+  {title:"Chapter 5 end of Chapter Exercises",due:"2026-09-21T23:59:00"},
+  {title:"APPLY Unemployment Digital Interactive",due:"2026-09-26T23:59:00"},
+  {title:"APPLY Consumer Price Index and Inflation Digital Interactive",due:"2026-09-26T23:59:00"},
+  {title:"ASSESS Chapter 6 Homework",due:"2026-09-26T23:59:00"},
+  {title:"ASSESS Chapter 7 Homework",due:"2026-10-03T23:59:00"},
+  {title:"ASSESS Chapter 8 Homework",due:"2026-10-10T23:59:00"},
+  {title:"Exam 2",due:"2026-10-14T23:59:00"},
+  {title:"Discussion Board Unit 9: Macroeconomic Metrics",due:"2026-10-17T23:59:00"},
+  {title:"ASSESS Chapter 9 Homework",due:"2026-10-17T23:59:00"}
+];
+for(const item of ecoAssignments){
+  const exists=A.some(x=>x.course===ECO2210 && x.title===item.title);
+  if(!exists) A.push({id:id(),title:item.title,course:ECO2210,due:new Date(item.due).toISOString(),done:false});
+}
+save();
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])),fmt=m=>m<60?m+"m":Math.floor(m/60)+"h "+m%60+"m";
 function save(){localStorage.setItem(K.a,JSON.stringify(A));localStorage.setItem(K.t,JSON.stringify(T));localStorage.setItem(K.g,JSON.stringify(G))}
 function render(){date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});let d=T.filter(x=>x.done).length,p=T.length?Math.round(d/T.length*100):0;ptext.textContent=`${d} of ${T.length} tasks completed`;ppct.textContent=p+"%";pbar.style.width=p+"%";stime.textContent=fmt(T.filter(x=>x.done).reduce((s,x)=>s+x.minutes,0));dsoon.textContent=A.filter(x=>!x.done&&new Date(x.due)>=new Date()&&new Date(x.due)<=new Date(Date.now()+7*86400000)).length;
