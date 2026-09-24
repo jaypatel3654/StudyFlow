@@ -1,16 +1,23 @@
 {
-  "name": "StudyFlow - College Study Manager",
-  "short_name": "StudyFlow",
+  "name": "J.K Study Management",
+  "short_name": "J.K Study",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f5f7fb",
-  "theme_color": "#5b67f1",
+  "theme_color": "#0d5bb7",
+  "description": "Assignments, study tasks, goals, and progress tracking.",
   "icons": [
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
       "purpose": "any maskable"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any"
     }
   ]
 }

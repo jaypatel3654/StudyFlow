@@ -1,30 +1,38 @@
 <!doctype html>
 <html lang="en"><head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#5b67f1"><meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="StudyFlow">
-<link rel="manifest" href="manifest.webmanifest"><link rel="apple-touch-icon" href="icon.svg">
-<title>StudyFlow</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d5bb7">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="J.K Study Management">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon.png">
+<title>J.K Study Management</title>
 <style>
-:root{--bg:#f5f7fb;--card:#fff;--text:#151821;--muted:#6f7785;--accent:#5b67f1;--line:#e7eaf0;--good:#22a06b}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;color:var(--text)}
+:root{--bg:#f5f7fb;--card:#fff;--text:#151821;--muted:#6f7785;--accent:#0d5bb7;--accent2:#11a750;--line:#e7eaf0;--good:#22a06b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",sans-serif;color:var(--text)}
 .app{max-width:520px;margin:auto;min-height:100dvh;padding-bottom:82px}
-header{padding:calc(env(safe-area-inset-top) + 18px) 18px 18px;background:linear-gradient(135deg,#5b67f1,#7c3aed);color:#fff}
-header h1{margin:2px 0 4px;font-size:30px}.small{font-size:13px;color:var(--muted)}header .small{color:#e9e9ff}
-main{padding:16px}.view{display:none}.view.active{display:block}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}
+header{padding:calc(env(safe-area-inset-top) + 16px) 18px 18px;background:linear-gradient(135deg,#0d5bb7,#11a750);color:#fff;text-align:center}
+header .small{font-size:13px;color:#eaf7ff}.brand-logo{width:min(260px,72vw);display:block;margin:6px auto 10px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.14));border-radius:18px;background:rgba(255,255,255,.96);padding:8px}
+header h1{margin:4px 0 4px;font-size:28px}
+main{padding:16px}.view{display:none}.view.active{display:block}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px;box-shadow:0 4px 18px rgba(30,42,70,.05)}
 h2{font-size:20px;margin:8px 0 12px}h3{font-size:16px;margin:0 0 4px}.between{display:flex;align-items:center;justify-content:space-between;gap:10px}.row{display:flex;align-items:center;gap:11px}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:12px}.stat{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}.stat b{font-size:24px;display:block}
-.item{padding:13px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.progress{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,#5b67f1,#8b5cf6)}
-.check{width:26px;height:26px;border:2px solid #cbd1dc;border-radius:8px;display:grid;place-items:center;background:#fff}.check.on{background:var(--good);border-color:var(--good);color:#fff}.icon{border:0;background:transparent;font-size:19px}.danger{color:#c62828}
-.pill{padding:5px 8px;border-radius:99px;background:#eef0ff;color:#4b57da;font-size:12px;font-weight:700}
-nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(520px,100%);height:72px;background:rgba(255,255,255,.96);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
-nav button{border:0;background:transparent;color:#7b8391;font-size:11px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px}.activeTab{color:#5b67f1!important;font-weight:700}
-.fab{position:fixed;right:max(18px,calc((100vw - 520px)/2 + 18px));bottom:86px;width:56px;height:56px;border:0;border-radius:18px;background:#5b67f1;color:#fff;font-size:30px}
+.item{padding:13px 0;border-bottom:1px solid var(--line)}.item:last-child{border-bottom:0}.progress{height:9px;background:#edf0f5;border-radius:99px;overflow:hidden}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+.check{width:26px;height:26px;border:2px solid #cbd1dc;border-radius:8px;display:grid;place-items:center;background:#fff;cursor:pointer}.check.on{background:var(--good);border-color:var(--good);color:#fff}.icon{border:0;background:transparent;font-size:19px;cursor:pointer}.danger{color:#c62828}
+.pill{padding:5px 8px;border-radius:99px;background:#eef7ff;color:#0d5bb7;font-size:12px;font-weight:700}
+nav{position:fixed;left:50%;transform:translateX(-50%);bottom:0;width:min(520px,100%);height:72px;background:rgba(255,255,255,.96);backdrop-filter:blur(12px);display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+nav button{border:0;background:transparent;color:#7b8391;font-size:11px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:3px}.activeTab{color:var(--accent)!important;font-weight:700}
+.fab{position:fixed;right:max(18px,calc((100vw - 520px)/2 + 18px));bottom:86px;width:56px;height:56px;border:0;border-radius:18px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:30px;box-shadow:0 10px 28px rgba(13,91,183,.25);cursor:pointer}
 dialog{border:0;border-radius:22px;width:min(92vw,440px);padding:18px}dialog::backdrop{background:rgba(0,0,0,.35)}
-input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;margin:6px 0 12px;font:inherit}.primary,.secondary{width:100%;padding:13px;border:0;border-radius:14px;font-weight:700}.primary{background:#5b67f1;color:#fff}.secondary{background:#eff1f6;color:#4d5664;margin-top:9px}
+input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;margin:6px 0 12px;font:inherit}.primary,.secondary{width:100%;padding:13px;border:0;border-radius:14px;font-weight:700;cursor:pointer}.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}.secondary{background:#eff1f6;color:#4d5664;margin-top:9px}
+.logo-card{display:flex;align-items:center;gap:12px;padding:12px 14px}.logo-card img{width:62px;height:62px;border-radius:14px;object-fit:contain;background:#fff;border:1px solid var(--line)}
+.logo-card .tagline{font-size:12px;color:var(--muted)}
 </style></head><body>
-<div class="app"><header><div class="small" id="date"></div><h1>StudyFlow</h1><div class="small">College assignments, study goals and progress.</div></header>
+<div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
+<div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div></div></div>
 <section id="today" class="view active">
 <div class="card"><div class="between"><div><div class="pill">TODAY</div><h2 id="ptext"></h2></div><b id="ppct"></b></div><div class="progress"><span id="pbar"></span></div></div>
 <div class="stats"><div class="stat"><span class="small">Study time</span><b id="stime"></b><span class="small">Completed tasks</span></div><div class="stat"><span class="small">Due soon</span><b id="dsoon"></b><span class="small">Next 7 days</span></div></div>
@@ -52,8 +60,9 @@ tasks.innerHTML=T.length?T.map(x=>`<div class="item row"><button class="check ${
 let active=A.filter(x=>!x.done).length;acount.textContent=active+" active";alist.innerHTML=A.length?A.sort((a,b)=>Number(a.done)-Number(b.done)||new Date(a.due)-new Date(b.due)).map(x=>`<div class="item row"><button class="check ${x.done?"on":""}" onclick="toggleA('${x.id}')">${x.done?"✓":""}</button><div style="flex:1"><h3 style="${x.done?"text-decoration:line-through;opacity:.55":""}">${esc(x.title)}</h3><div class="small">${esc(x.course)} • ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div></div><button class="icon danger" onclick="delA('${x.id}')">⌫</button></div>`).join(""):'<span class="small">No assignments yet.</span>';
 glist.innerHTML=G.length?G.map(x=>{let q=Math.min(100,Math.round(x.done/x.target*100));return `<div class="item"><div class="between"><h3>${esc(x.title)}</h3><b>${q}%</b></div><div class="progress"><span style="width:${q}%"></span></div><div class="between" style="margin-top:9px"><span class="small">${fmt(x.done)} / ${fmt(x.target)}</span><span><button onclick="gm('${x.id}',-30)">−30m</button> <button onclick="gm('${x.id}',30)">+30m</button></span></div></div>`}).join(""):'<span class="small">No goals yet.</span>';
 rtasks.textContent=d;rassign.textContent=A.filter(x=>x.done).length;rbar.style.width=p+"%";rtext.textContent=p+"% of your current study tasks are complete.";save()}
-function toggleT(i){T.find(x=>x.id===i).done=!T.find(x=>x.id===i).done;render()}function delT(i){T=T.filter(x=>x.id!==i);render()}function toggleA(i){A.find(x=>x.id===i).done=!A.find(x=>x.id===i).done;render()}function delA(i){A=A.filter(x=>x.id!==i);render()}function gm(i,n){let x=G.find(x=>x.id===i);x.done=Math.max(0,x.done+n);render()}
+function toggleT(i){let x=T.find(x=>x.id===i);x.done=!x.done;render()} function delT(i){T=T.filter(x=>x.id!==i);render()} function toggleA(i){let x=A.find(x=>x.id===i);x.done=!x.done;render()} function delA(i){A=A.filter(x=>x.id!==i);render()} function gm(i,n){let x=G.find(x=>x.id===i);x.done=Math.max(0,x.done+n);render()}
 function openForm(k){dtitle.textContent=k==="assignment"?"Add assignment":k==="task"?"Add study task":"Add goal";fa.hidden=k!=="assignment";ft.hidden=k!=="task";fg.hidden=k!=="goal";dlg.showModal()}
-function saveA(){if(!at.value.trim()||!ad.value)return;A.push({id:id(),title:at.value.trim(),course:ac.value,due:new Date(ad.value).toISOString(),done:false});at.value="";dlg.close();render()}function saveT(){if(!tt.value.trim())return;T.unshift({id:id(),title:tt.value.trim(),course:tc.value,minutes:Number(tm.value)||30,done:false});tt.value="";dlg.close();render()}function saveG(){if(!gt.value.trim())return;G.push({id:id(),title:gt.value.trim(),target:(Number(gh.value)||5)*60,done:0});gt.value="";dlg.close();render()}
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("activeTab"));b.classList.add("activeTab");document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));document.getElementById(b.dataset.v).classList.add("active")});fab.onclick=()=>openForm(document.getElementById("assignments").classList.contains("active")?"assignment":"task");if("serviceWorker"in navigator)navigator.serviceWorker.register("./sw.js");render();
+function saveA(){if(!at.value.trim()||!ad.value)return;A.push({id:id(),title:at.value.trim(),course:ac.value,due:new Date(ad.value).toISOString(),done:false});at.value="";dlg.close();render()} function saveT(){if(!tt.value.trim())return;T.unshift({id:id(),title:tt.value.trim(),course:tc.value,minutes:Number(tm.value)||30,done:false});tt.value="";dlg.close();render()} function saveG(){if(!gt.value.trim())return;G.push({id:id(),title:gt.value.trim(),target:(Number(gh.value)||5)*60,done:0});gt.value="";dlg.close();render()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('activeTab'));b.classList.add('activeTab');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(b.dataset.v).classList.add('active')});
+fab.onclick=()=>openForm(document.getElementById('assignments').classList.contains('active')?'assignment':'task'); if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js'); render();
 </script></body></html>
