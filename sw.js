@@ -1,4 +1,4 @@
-const CACHE="jk-study-v3";
+const CACHE="jk-study-v4";
 const ASSETS=["./","./index.html","./manifest.webmanifest","./icon.png","./logo.png"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener("activate",e=>e.waitUntil(Promise.all([
