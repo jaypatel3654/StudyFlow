@@ -1,0 +1,99 @@
+const SUPABASE_URL='https://cfiwsgqcoeddqqukgxho.supabase.co';
+const SUPABASE_KEY='sb_publishable_xExXRjTfzng1z4sa_bsGFg_EQ-ai6RO';
+const INVITE_KEY='jk.shared.invite.v1';
+const CACHE_KEY='jk.shared.cache.v1';
+const ECO2210='ECO 2210 - Principles of Macroeconomics (SHO1C)';
+const ENG2211='ENG 2211 - Business Communication (GT02C)';
+const MKT2000='MKT 2000 - Marketing Management (EE01C)';
+const BIO='BIO - Biology';
+const $=id=>document.getElementById(id);
+let inviteCode=localStorage.getItem(INVITE_KEY)||'';
+let A=[],T=[],G=[],joined=false,loading=false;
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const fmt=m=>m<60?m+'m':Math.floor(m/60)+'h '+(m%60)+'m';
+const toInput=d=>{const x=new Date(d),p=n=>String(n).padStart(2,'0');return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate())+'T'+p(x.getHours())+':'+p(x.getMinutes())};
+
+async function rpc(name,args){
+  const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+name,{
+    method:'POST',
+    headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+    body:JSON.stringify(args||{})
+  });
+  const text=await r.text();
+  if(!r.ok){let msg='Request failed';try{msg=JSON.parse(text).message||msg}catch{}throw new Error(msg)}
+  return text?JSON.parse(text):null;
+}
+function setSync(text,ok=true){const el=$('syncStatus');if(el)el.textContent=text;const dot=document.querySelector('.sync-dot');if(dot)dot.style.background=ok?'#22a06b':'#f59e0b'}
+function applyState(state){A=Array.isArray(state.assignments)?state.assignments:[];T=Array.isArray(state.tasks)?state.tasks:[];G=Array.isArray(state.goals)?state.goals.map(g=>Object.assign({},g,{target:g.target_minutes,done:g.done_minutes})):[];localStorage.setItem(CACHE_KEY,JSON.stringify(state));render()}
+function loadCached(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c)applyState(c)}catch{}}
+async function verifyInvite(code){return await rpc('app_verify_invite',{p_code:code})}
+async function joinWithCode(code){
+  const clean=String(code||'').trim().toUpperCase(); if(!clean)return false;
+  $('inviteError').textContent='Checking code…';
+  try{
+    const ok=await verifyInvite(clean);
+    if(!ok){$('inviteError').textContent='That invite code is not valid.';return false}
+    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await loadSharedState(false);return true
+  }catch(e){$('inviteError').textContent='Could not connect. Check your internet and try again.';return false}
+}
+async function loadSharedState(silent=true){
+  if(!joined||loading||!inviteCode)return;loading=true;if(!silent)setSync('Syncing…');
+  try{const state=await rpc('app_get_state',{p_code:inviteCode});applyState(state||{});setSync('Shared • Live')}catch(e){setSync('Offline • showing last sync',false)}finally{loading=false}
+}
+async function mutate(name,args){
+  if(!joined){$('inviteGate').hidden=false;return}
+  setSync('Saving…');
+  try{await rpc(name,Object.assign({p_code:inviteCode},args||{}));await loadSharedState(false)}
+  catch(e){alert(e.message||'Could not save the change.');setSync('Sync problem',false)}
+}
+function priorityContext(){
+  const now=new Date(),future=A.filter(x=>!x.done&&new Date(x.due)>=now).sort((a,b)=>new Date(a.due)-new Date(b.due)),isExam=x=>/\bexam\b/i.test(x.title),nonExam=future.filter(x=>!isExam(x)),exams=future.filter(isExam);
+  return{now,nearestAssignmentDue:nonExam.length?new Date(nonExam[0].due).getTime():null,nearestExamDue:exams.length?new Date(exams[0].due).getTime():null,isExam}
+}
+function priorityInfo(x,ctx){
+  const due=new Date(x.due).getTime();
+  if((!ctx.isExam(x)&&ctx.nearestAssignmentDue!==null&&due===ctx.nearestAssignmentDue)||(ctx.isExam(x)&&ctx.nearestExamDue!==null&&due===ctx.nearestExamDue))return{label:'Highest priority',cls:'priority-highest',rank:0};
+  const days=(due-ctx.now.getTime())/86400000;if(days<=7)return{label:'High priority',cls:'priority-high',rank:1};if(days<=14)return{label:'Medium priority',cls:'priority-medium',rank:2};return{label:'Low priority',cls:'priority-low',rank:3}
+}
+function assignmentRow(x,mode,ctx){
+  const p=mode==='upcoming'?priorityInfo(x,ctx):null,status=x.done?'<span class="status-pill status-completed">Completed</span>':mode==='past'?'<span class="status-pill status-past">Past due</span>':'<span class="status-pill status-pending">Pending</span>',priority=p?'<span class="priority-pill '+p.cls+'">'+p.label+'</span>':'';
+  return '<div class="item row '+(p&&p.rank===0?'priority-card':'')+'"><button class="check '+(x.done?'on':'')+'" onclick="toggleA(\''+x.id+'\')">'+(x.done?'✓':'')+'</button><div style="flex:1"><h3 style="'+(x.done?'text-decoration:line-through;opacity:.65':'')+'">'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • Due '+new Date(x.due).toLocaleString([],{dateStyle:'medium',timeStyle:'short'})+'</div>'+(x.note?'<div class="small" style="margin-top:4px">'+esc(x.note)+'</div>':'')+'<div class="assignment-meta">'+status+priority+'</div></div><button class="icon edit" onclick="editA(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delA(\''+x.id+'\')">⌫</button></div>'
+}
+function renderSubject(containerId,course,label,sets,ctx){
+  const el=$(containerId);if(!el)return;const upcoming=sets.future.filter(x=>x.course===course),past=sets.past.filter(x=>x.course===course),completed=sets.completed.filter(x=>x.course===course);
+  el.innerHTML='<div class="course-assignments"><div class="assignment-section-title">Upcoming</div>'+(upcoming.length?upcoming.map(x=>assignmentRow(x,'upcoming',ctx)).join(''):'<span class="small">No upcoming '+label+' assignments.</span>')+'<details class="folder"><summary>Completed ('+completed.length+')</summary><div class="folder-body">'+(completed.length?completed.map(x=>assignmentRow(x,'completed',ctx)).join(''):'<span class="small">No completed '+label+' assignments.</span>')+'</div></details><details class="folder"><summary>Past Assignments ('+past.length+')</summary><div class="folder-body">'+(past.length?past.map(x=>assignmentRow(x,'past',ctx)).join(''):'<span class="small">No past-due '+label+' assignments.</span>')+'</div></details></div>'
+}
+function render(){
+  $('date').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const doneTasks=T.filter(x=>x.done).length,taskPct=T.length?Math.round(doneTasks/T.length*100):0;
+  $('ptext').textContent=doneTasks+' of '+T.length+' tasks completed';$('ppct').textContent=taskPct+'%';$('pbar').style.width=taskPct+'%';$('stime').textContent=fmt(T.filter(x=>x.done).reduce((s,x)=>s+Number(x.minutes||0),0));$('dsoon').textContent=A.filter(x=>!x.done&&new Date(x.due)>=new Date()&&new Date(x.due)<=new Date(Date.now()+7*86400000)).length;
+  $('tasks').innerHTML=T.length?T.map(x=>'<div class="item row"><button class="check '+(x.done?'on':'')+'" onclick="toggleT(\''+x.id+'\')">'+(x.done?'✓':'')+'</button><div style="flex:1"><h3 style="'+(x.done?'text-decoration:line-through;opacity:.55':'')+'">'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>').join(''):'<span class="small">No shared study tasks yet.</span>';
+  const now=new Date(),ctx=priorityContext(),future=A.filter(x=>!x.done&&new Date(x.due)>=now),past=A.filter(x=>!x.done&&new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due)),completed=A.filter(x=>x.done).sort((a,b)=>new Date(b.due)-new Date(a.due));
+  future.sort((a,b)=>priorityInfo(a,ctx).rank-priorityInfo(b,ctx).rank||new Date(a.due)-new Date(b.due));
+  $('acount').textContent=future.length+' upcoming';$('upcomingList').innerHTML=future.length?future.map(x=>assignmentRow(x,'upcoming',ctx)).join(''):'<span class="small">No upcoming assignments.</span>';$('completedSummary').textContent='Completed ('+completed.length+')';$('completedList').innerHTML=completed.length?completed.map(x=>assignmentRow(x,'completed',ctx)).join(''):'<span class="small">No completed assignments yet.</span>';$('pastSummary').textContent='Past Assignments ('+past.length+')';$('pastList').innerHTML=past.length?past.map(x=>assignmentRow(x,'past',ctx)).join(''):'<span class="small">No past-due assignments.</span>';
+  const sets={future,past,completed};renderSubject('ecoSubjectAssignments',ECO2210,'ECO',sets,ctx);renderSubject('engSubjectAssignments',ENG2211,'ENG',sets,ctx);renderSubject('mktSubjectAssignments',MKT2000,'MKT',sets,ctx);renderSubject('bioSubjectAssignments',BIO,'BIO',sets,ctx);
+  $('glist').innerHTML=G.length?G.map(x=>{const q=Math.min(100,Math.round(Number(x.done||0)/Number(x.target||1)*100));return '<div class="item"><div class="between"><h3>'+esc(x.title)+'</h3><b>'+q+'%</b></div><div class="progress"><span style="width:'+q+'%"></span></div><div class="between" style="margin-top:9px"><span class="small">'+fmt(Number(x.done||0))+' / '+fmt(Number(x.target||0))+'</span><span><button onclick="gm(\''+x.id+'\',-30)">−30m</button> <button onclick="gm(\''+x.id+'\',30)">+30m</button> <button class="icon edit" onclick="editG(\''+x.id+'\')">✎</button> <button class="icon danger" onclick="delG(\''+x.id+'\')">⌫</button></span></div></div>'}).join(''):'<span class="small">No shared goals yet.</span>';
+  $('rtasks').textContent=doneTasks;$('rassign').textContent=completed.length;$('rbar').style.width=taskPct+'%';$('rtext').textContent=taskPct+'% of your current study tasks are complete.'
+}
+async function toggleA(id){const x=A.find(v=>v.id===id);if(x)await mutate('app_set_assignment_done',{p_id:id,p_done:!x.done})}
+async function delA(id){if(confirm('Delete this assignment for everyone?'))await mutate('app_delete_assignment',{p_id:id})}
+async function editA(id){const x=A.find(v=>v.id===id);if(!x)return;const title=prompt('Assignment title',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const due=prompt('Due date and time',toInput(x.due));if(due===null||!due.trim())return;const note=prompt('Optional note',x.note||'');if(note===null)return;const parsed=new Date(due);if(isNaN(parsed)){alert('Please enter a valid date/time.');return}await mutate('app_update_assignment',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_due:parsed.toISOString(),p_note:note})}
+async function toggleT(id){const x=T.find(v=>v.id===id);if(x)await mutate('app_set_task_done',{p_id:id,p_done:!x.done})}
+async function delT(id){if(confirm('Delete this study task for everyone?'))await mutate('app_delete_task',{p_id:id})}
+async function editT(id){const x=T.find(v=>v.id===id);if(!x)return;const title=prompt('Study task',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const minutes=Number(prompt('Minutes',x.minutes));if(!minutes||minutes<1)return;await mutate('app_update_task',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_minutes:minutes})}
+async function gm(id,n){await mutate('app_adjust_goal',{p_id:id,p_delta_minutes:n})}
+async function delG(id){if(confirm('Delete this goal for everyone?'))await mutate('app_delete_goal',{p_id:id})}
+async function editG(id){const x=G.find(v=>v.id===id);if(!x)return;const title=prompt('Goal name',x.title);if(title===null||!title.trim())return;const hours=Number(prompt('Target hours',Math.max(1,Math.round(Number(x.target||60)/60))));if(!hours||hours<1)return;await mutate('app_update_goal',{p_id:id,p_title:title.trim(),p_target_minutes:hours*60})}
+function openForm(k){$('dtitle').textContent=k==='assignment'?'Add assignment':k==='task'?'Add study task':'Add goal';$('fa').hidden=k!=='assignment';$('ft').hidden=k!=='task';$('fg').hidden=k!=='goal';$('dlg').showModal()}
+async function saveA(){if(!$('at').value.trim()||!$('ad').value)return;await mutate('app_add_assignment',{p_title:$('at').value.trim(),p_course:$('ac').value,p_due:new Date($('ad').value).toISOString(),p_note:$('anote').value.trim()});$('at').value='';$('ad').value='';$('anote').value='';$('dlg').close()}
+async function saveT(){if(!$('tt').value.trim())return;await mutate('app_add_task',{p_title:$('tt').value.trim(),p_course:$('tc').value,p_minutes:Number($('tm').value)||30});$('tt').value='';$('dlg').close()}
+async function saveG(){if(!$('gt').value.trim())return;await mutate('app_add_goal',{p_title:$('gt').value.trim(),p_target_minutes:(Number($('gh').value)||5)*60});$('gt').value='';$('dlg').close()}
+function changeInvite(){localStorage.removeItem(INVITE_KEY);inviteCode='';joined=false;$('inviteInput').value='';$('inviteGate').hidden=false;$('inviteError').textContent='';setSync('Invite code required',false)}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('activeTab'));b.classList.add('activeTab');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.v).classList.add('active')});
+$('fab').onclick=()=>openForm($('assignments').classList.contains('active')?'assignment':'task');
+$('inviteButton').onclick=()=>joinWithCode($('inviteInput').value);
+$('inviteInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWithCode($('inviteInput').value)});
+loadCached();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+(async()=>{if(inviteCode){$('inviteInput').value=inviteCode;const ok=await joinWithCode(inviteCode);if(!ok)$('inviteGate').hidden=false}else{$('inviteGate').hidden=false;setSync('Invite code required',false)}})();
+setInterval(()=>{if(joined&&!document.hidden)loadSharedState(true)},3000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&joined)loadSharedState(false)});
