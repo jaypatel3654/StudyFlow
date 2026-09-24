@@ -62,7 +62,11 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <div class="small">Section SHO1C</div>
     <div id="ecoSubjectAssignments"></div>
   </div>
-  <div class="item"><h3>ENG 2211 - Business Communication</h3><div class="small">Section GT02C</div></div>
+  <div class="item">
+    <h3>ENG 2211 - Business Communication</h3>
+    <div class="small">Section GT02C</div>
+    <div id="engSubjectAssignments"></div>
+  </div>
   <div class="item"><h3>MKT 2000 - Marketing Management</h3><div class="small">Section EE01C</div></div>
   <div class="item"><h3>BIO - Biology</h3><div class="small">Biology course</div></div>
 </section>
@@ -120,6 +124,27 @@ for(const item of ecoAssignments){
   const exists=A.some(x=>x.course===ECO2210 && x.title===item.title);
   if(!exists) A.push({id:id(),title:item.title,course:ECO2210,due:new Date(item.due).toISOString(),done:false});
 }
+const ENG2211="ENG 2211 - Business Communication (GT02C)";
+const engAssignments=[
+  {title:"APPLY: Chapter 4 Grammar Check Quiz (8 pts)",due:"2026-09-14T23:59:00"},
+  {title:"APPLY: CH 5 Skills-Building Exercise #9 (27 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: CH 5 Critical-Thinking Question #1 (10 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: Chapter 5 Grammar Check Quiz (8 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: CH 6 Skills-Building Exercises (79 pts.)",due:"2026-09-28T23:59:00",note:"Unlimited attempts possible"},
+  {title:"Quiz #3 Chapters 5 and 6 (25 pts.)",due:"2026-09-28T23:59:00"},
+  {title:"APPLY: Chapter 6 Grammar Check Quiz (8 pts.)",due:"2026-09-28T23:59:00"},
+  {title:"APPLY: CH 7 Problem-Solving Case #4 (100 pts.; eligible for revision)",due:"2026-10-05T23:59:00",note:"Unlimited attempts possible"},
+  {title:"APPLY: Chapter 7 Grammar Check Quiz (8 pts.)",due:"2026-10-05T23:59:00"},
+  {title:"APPLY: CH 8 Problem-Solving Case #24 (100 pts.; eligible for revision)",due:"2026-10-12T23:59:00",note:"Unlimited attempts possible"},
+  {title:"APPLY: Quiz #4 Chapters 7 and 8",due:"2026-10-12T23:59:00"},
+  {title:"APPLY: Chapter 8 Grammar Check Quiz (8 pts.)",due:"2026-10-12T23:59:00"},
+  {title:"APPLY: CH 9 Critical-Thinking Question #1 (10 pts.)",due:"2026-10-19T23:59:00"}
+];
+for(const item of engAssignments){
+  const existing=A.find(x=>x.course===ENG2211 && x.title===item.title);
+  if(!existing) A.push({id:id(),title:item.title,course:ENG2211,due:new Date(item.due).toISOString(),done:false,note:item.note||""});
+  else if(item.note && !existing.note) existing.note=item.note;
+}
 save();
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])),fmt=m=>m<60?m+"m":Math.floor(m/60)+"h "+m%60+"m";
 function save(){localStorage.setItem(K.a,JSON.stringify(A));localStorage.setItem(K.t,JSON.stringify(T));localStorage.setItem(K.g,JSON.stringify(G))}
@@ -153,6 +178,7 @@ function assignmentRow(x,mode){
     <div style="flex:1">
       <h3 style="${x.done?"text-decoration:line-through;opacity:.65":""}">${esc(x.title)}</h3>
       <div class="small">${esc(x.course)} • Due ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div>
+      ${x.note?'<div class="small" style="margin-top:4px">'+esc(x.note)+'</div>':''}
       <div class="assignment-meta">${status}${priority}</div>
     </div>
     <button class="icon danger" aria-label="Delete assignment" onclick="delA('${x.id}')">⌫</button>
@@ -179,6 +205,22 @@ ecoSubjectAssignments.innerHTML=`
     <details class="folder">
       <summary>Past Assignments (${ecoPast.length})</summary>
       <div class="folder-body">${ecoPast.length?ecoPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ECO assignments.</span>'}</div>
+    </details>
+  </div>`;
+const engFuture=futurePending.filter(x=>x.course===ENG2211);
+const engPast=pastPending.filter(x=>x.course===ENG2211);
+const engCompleted=completed.filter(x=>x.course===ENG2211);
+engSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${engFuture.length?engFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming ENG assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${engCompleted.length})</summary>
+      <div class="folder-body">${engCompleted.length?engCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed ENG assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${engPast.length})</summary>
+      <div class="folder-body">${engPast.length?engPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ENG assignments.</span>'}</div>
     </details>
   </div>`;
 glist.innerHTML=G.length?G.map(x=>{let q=Math.min(100,Math.round(x.done/x.target*100));return `<div class="item"><div class="between"><h3>${esc(x.title)}</h3><b>${q}%</b></div><div class="progress"><span style="width:${q}%"></span></div><div class="between" style="margin-top:9px"><span class="small">${fmt(x.done)} / ${fmt(x.target)}</span><span><button onclick="gm('${x.id}',-30)">−30m</button> <button onclick="gm('${x.id}',30)">+30m</button></span></div></div>`}).join(""):'<span class="small">No goals yet.</span>';
