@@ -4,6 +4,7 @@ const INVITE_KEY='jk.shared.invite.v1';
 const CACHE_KEY='jk.shared.cache.v1';
 const DEVICE_KEY='jk.shared.device.v1';
 const ADMIN_SESSION_KEY='jk.admin.code.v1';
+const PROFILE_KEY='jk.shared.profile.name.v1';
 const ECO2210='ECO 2210 - Principles of Macroeconomics (SHO1C)';
 const ENG2211='ENG 2211 - Business Communication (GT02C)';
 const MKT2000='MKT 2000 - Marketing Management (EE01C)';
@@ -13,6 +14,8 @@ let inviteCode=localStorage.getItem(INVITE_KEY)||'';
 let deviceId=localStorage.getItem(DEVICE_KEY)||'';
 if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem(DEVICE_KEY,deviceId)}
 const sessionId=crypto.randomUUID();
+let participantName=localStorage.getItem(PROFILE_KEY)||'';
+let profileResolve=null;
 let A=[],T=[],G=[],joined=false,loading=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt=m=>m<60?m+'m':Math.floor(m/60)+'h '+(m%60)+'m';
@@ -63,13 +66,59 @@ function browserLabel(ua){
   const browser=/CriOS|Chrome/i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':/Firefox/i.test(ua)?'Firefox':'Browser';
   return device+' • '+browser
 }
+function setMemberStatus(){
+  const el=$('memberStatus');
+  if(el)el.textContent=participantName?'Shared as '+participantName:'';
+}
+async function ensureProfile(){
+  try{
+    if(participantName){
+      participantName=await rpc('app_register_participant',{p_code:inviteCode,p_device_id:deviceId,p_display_name:participantName});
+      localStorage.setItem(PROFILE_KEY,participantName);
+      setMemberStatus();
+      return participantName;
+    }
+    const existing=await rpc('app_get_participant',{p_code:inviteCode,p_device_id:deviceId});
+    if(existing){
+      participantName=existing;
+      localStorage.setItem(PROFILE_KEY,participantName);
+      setMemberStatus();
+      return participantName;
+    }
+  }catch{}
+  $('profileName').value='';
+  $('profileError').textContent='';
+  if(!$('profileDlg').open)$('profileDlg').showModal();
+  return await new Promise(resolve=>{profileResolve=resolve});
+}
+async function saveProfile(){
+  const name=$('profileName').value.trim();
+  if(!name){$('profileError').textContent='Please enter your name.';return}
+  $('profileError').textContent='Saving…';
+  try{
+    participantName=await rpc('app_register_participant',{p_code:inviteCode,p_device_id:deviceId,p_display_name:name});
+    localStorage.setItem(PROFILE_KEY,participantName);
+    setMemberStatus();
+    $('profileError').textContent='';
+    $('profileDlg').close();
+    if(profileResolve){const r=profileResolve;profileResolve=null;r(participantName)}
+  }catch(e){
+    $('profileError').textContent='Could not save your name. Try again.'
+  }
+}
+function changeName(){
+  $('profileName').value=participantName||'';
+  $('profileError').textContent='';
+  if(!$('profileDlg').open)$('profileDlg').showModal();
+}
+
 async function joinWithCode(code){
   const clean=String(code||'').trim().toUpperCase(); if(!clean)return false;
   $('inviteError').textContent='Checking code…';
   try{
     const ok=await verifyInvite(clean);
     if(!ok){$('inviteError').textContent='That invite code is not valid.';return false}
-    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await loadSharedState(false);logVisit('start');return true
+    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await ensureProfile();await loadSharedState(false);logVisit('start');return true
   }catch(e){$('inviteError').textContent='Could not connect. Check your internet and try again.';return false}
 }
 async function loadSharedState(silent=true){
@@ -107,6 +156,12 @@ function renderSubject(containerId,course,label,sets,ctx){
   const el=$(containerId);if(!el)return;const upcoming=sets.future.filter(x=>x.course===course),past=sets.past.filter(x=>x.course===course),completed=sets.completed.filter(x=>x.course===course);
   el.innerHTML='<div class="course-assignments"><div class="assignment-section-title">Upcoming</div>'+(upcoming.length?upcoming.map(x=>assignmentRow(x,'upcoming',ctx)).join(''):'<span class="small">No upcoming '+label+' assignments.</span>')+'<details class="folder"><summary>Completed ('+completed.length+')</summary><div class="folder-body">'+(completed.length?completed.map(x=>assignmentRow(x,'completed',ctx)).join(''):'<span class="small">No completed '+label+' assignments.</span>')+'</div></details><details class="folder"><summary>Past Assignments ('+past.length+')</summary><div class="folder-body">'+(past.length?past.map(x=>assignmentRow(x,'past',ctx)).join(''):'<span class="small">No past-due '+label+' assignments.</span>')+'</div></details></div>'
 }
+function taskRow(x){
+  const when=x.scheduled_at?new Date(x.scheduled_at):null;
+  const whenText=when&&!isNaN(when)?when.toLocaleString([],{dateStyle:'medium',timeStyle:'short'}):'Not scheduled';
+  return '<div class="item row"><button class="check '+(x.done?'on':'')+'" onclick="toggleT(\''+x.id+'\')">'+(x.done?'✓':'')+'</button><div style="flex:1"><h3 style="'+(x.done?'text-decoration:line-through;opacity:.55':'')+'">'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min • '+esc(whenText)+'</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>'
+}
+
 function render(){
   const now=new Date();
   $('date').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
@@ -116,14 +171,14 @@ function render(){
   const todaysAssignments=A
     .filter(x=>!x.done&&sameDay(new Date(x.due),now))
     .sort((a,b)=>new Date(a.due)-new Date(b.due));
-  const todaysTasks=T.filter(x=>!x.done);
+  const todaysTasks=T.filter(x=>!x.done&&x.scheduled_at&&sameDay(new Date(x.scheduled_at),now)).sort((a,b)=>new Date(a.scheduled_at)-new Date(b.scheduled_at));
   $('todayCount').textContent=(todaysAssignments.length+todaysTasks.length)+' to do';
   $('todayAssignments').innerHTML=todaysAssignments.length
     ?todaysAssignments.map(x=>assignmentRow(x,'upcoming',ctx)).join('')
     :'<div class="empty-state">No assignments are due today.</div>';
   $('tasks').innerHTML=todaysTasks.length
-    ?todaysTasks.map(x=>'<div class="item row"><button class="check" onclick="toggleT(\''+x.id+'\')"></button><div style="flex:1"><h3>'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>').join('')
-    :'<div class="empty-state">No study tasks left for today.</div>';
+    ?todaysTasks.map(taskRow).join('')
+    :'<div class="empty-state">No study tasks scheduled for today.</div>';
 
   const future=A.filter(x=>!x.done&&new Date(x.due)>=now);
   const past=A.filter(x=>!x.done&&new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due));
@@ -186,6 +241,12 @@ function render(){
     const q=Math.min(100,Math.round(Number(x.done||0)/Number(x.target||1)*100));
     return '<div class="item"><div class="between"><h3>'+esc(x.title)+'</h3><b>'+q+'%</b></div><div class="progress"><span style="width:'+q+'%"></span></div><div class="between" style="margin-top:9px"><span class="small">'+fmt(Number(x.done||0))+' / '+fmt(Number(x.target||0))+'</span><span><button onclick="gm(\''+x.id+'\',-30)">−30m</button> <button onclick="gm(\''+x.id+'\',30)">+30m</button> <button class="icon edit" onclick="editG(\''+x.id+'\')">✎</button> <button class="icon danger" onclick="delG(\''+x.id+'\')">⌫</button></span></div></div>'
   }).join(''):'<div class="empty-state">No study goals yet.</div>';
+  const upcomingStudyTasks=T
+    .filter(x=>!x.done&&x.scheduled_at&&!sameDay(new Date(x.scheduled_at),now)&&new Date(x.scheduled_at)>now)
+    .sort((a,b)=>new Date(a.scheduled_at)-new Date(b.scheduled_at));
+  $('upcomingTasks').innerHTML=upcomingStudyTasks.length
+    ?upcomingStudyTasks.map(taskRow).join('')
+    :'<div class="empty-state">No future study sessions scheduled.</div>';
 
   const doneTasks=T.filter(x=>x.done).length;
   const assignmentPct=A.length?Math.round(completed.length/A.length*100):0;
@@ -212,13 +273,35 @@ async function delA(id){const x=A.find(v=>v.id===id);if(confirm('Delete this ass
 async function editA(id){const x=A.find(v=>v.id===id);if(!x)return;const title=prompt('Assignment title',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const due=prompt('Due date and time',toInput(x.due));if(due===null||!due.trim())return;const note=prompt('Optional note',x.note||'');if(note===null)return;const parsed=new Date(due);if(isNaN(parsed)){alert('Please enter a valid date/time.');return}await mutate('app_update_assignment',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_due:parsed.toISOString(),p_note:note},{action:'assignment_updated',entityType:'assignment',entityId:id,summary:title.trim()})}
 async function toggleT(id){const x=T.find(v=>v.id===id);if(x)await mutate('app_set_task_done',{p_id:id,p_done:!x.done},{action:!x.done?'task_completed':'task_reopened',entityType:'task',entityId:id,summary:x.title})}
 async function delT(id){const x=T.find(v=>v.id===id);if(confirm('Delete this study task for everyone?'))await mutate('app_delete_task',{p_id:id},{action:'task_deleted',entityType:'task',entityId:id,summary:x?x.title:'Study task'})}
-async function editT(id){const x=T.find(v=>v.id===id);if(!x)return;const title=prompt('Study task',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const minutes=Number(prompt('Minutes',x.minutes));if(!minutes||minutes<1)return;await mutate('app_update_task',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_minutes:minutes},{action:'task_updated',entityType:'task',entityId:id,summary:title.trim()})}
+async function editT(id){
+  const x=T.find(v=>v.id===id);if(!x)return;
+  const title=prompt('Study task',x.title);if(title===null||!title.trim())return;
+  const course=prompt('Course',x.course);if(course===null||!course.trim())return;
+  const minutes=Number(prompt('Minutes',x.minutes));if(!minutes||minutes<1)return;
+  const scheduled=prompt('Study date and time',x.scheduled_at?toInput(x.scheduled_at):toInput(new Date()));
+  if(scheduled===null||!scheduled.trim())return;
+  const parsed=new Date(scheduled);if(isNaN(parsed)){alert('Please enter a valid date/time.');return}
+  await mutate('app_update_task_v2',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_minutes:minutes,p_scheduled_at:parsed.toISOString()},{action:'task_updated',entityType:'task',entityId:id,summary:title.trim()})
+}
 async function gm(id,n){const x=G.find(v=>v.id===id);await mutate('app_adjust_goal',{p_id:id,p_delta_minutes:n},{action:'goal_progress_changed',entityType:'goal',entityId:id,summary:(x?x.title:'Goal')+' ('+(n>=0?'+':'')+n+' min)'})}
 async function delG(id){const x=G.find(v=>v.id===id);if(confirm('Delete this goal for everyone?'))await mutate('app_delete_goal',{p_id:id},{action:'goal_deleted',entityType:'goal',entityId:id,summary:x?x.title:'Goal'})}
 async function editG(id){const x=G.find(v=>v.id===id);if(!x)return;const title=prompt('Goal name',x.title);if(title===null||!title.trim())return;const hours=Number(prompt('Target hours',Math.max(1,Math.round(Number(x.target||60)/60))));if(!hours||hours<1)return;await mutate('app_update_goal',{p_id:id,p_title:title.trim(),p_target_minutes:hours*60},{action:'goal_updated',entityType:'goal',entityId:id,summary:title.trim()})}
-function openForm(k){$('dtitle').textContent=k==='assignment'?'Add assignment':k==='task'?'Add study task':'Add goal';$('fa').hidden=k!=='assignment';$('ft').hidden=k!=='task';$('fg').hidden=k!=='goal';$('dlg').showModal()}
+function openForm(k){
+  $('dtitle').textContent=k==='assignment'?'Add assignment':k==='task'?'Add study task':'Add goal';
+  $('fa').hidden=k!=='assignment';$('ft').hidden=k!=='task';$('fg').hidden=k!=='goal';
+  if(k==='task'&&!$('ts').value){
+    const d=new Date();d.setSeconds(0,0);d.setMinutes(0);d.setHours(d.getHours()+1);
+    $('ts').value=toInput(d)
+  }
+  $('dlg').showModal()
+}
 async function saveA(){if(!$('at').value.trim()||!$('ad').value)return;await mutate('app_add_assignment',{p_title:$('at').value.trim(),p_course:$('ac').value,p_due:new Date($('ad').value).toISOString(),p_note:$('anote').value.trim()},{action:'assignment_added',entityType:'assignment',summary:$('at').value.trim()});$('at').value='';$('ad').value='';$('anote').value='';$('dlg').close()}
-async function saveT(){if(!$('tt').value.trim())return;await mutate('app_add_task',{p_title:$('tt').value.trim(),p_course:$('tc').value,p_minutes:Number($('tm').value)||30},{action:'task_added',entityType:'task',summary:$('tt').value.trim()});$('tt').value='';$('dlg').close()}
+async function saveT(){
+  if(!$('tt').value.trim()||!$('ts').value)return;
+  const scheduled=new Date($('ts').value);if(isNaN(scheduled))return;
+  await mutate('app_add_task_v2',{p_title:$('tt').value.trim(),p_course:$('tc').value,p_minutes:Number($('tm').value)||30,p_scheduled_at:scheduled.toISOString()},{action:'task_added',entityType:'task',summary:$('tt').value.trim()});
+  $('tt').value='';$('ts').value='';$('dlg').close()
+}
 async function saveG(){if(!$('gt').value.trim())return;await mutate('app_add_goal',{p_title:$('gt').value.trim(),p_target_minutes:(Number($('gh').value)||5)*60},{action:'goal_added',entityType:'goal',summary:$('gt').value.trim()});$('gt').value='';$('dlg').close()}
 function changeInvite(){localStorage.removeItem(INVITE_KEY);inviteCode='';joined=false;$('inviteInput').value='';$('inviteGate').hidden=false;$('inviteError').textContent='';setSync('Invite code required',false)}
 function openAdmin(){
@@ -245,11 +328,11 @@ async function loadAdmin(){
       '<div class="stat"><span class="small">Active now</span><b>'+Number(s.active_devices||0)+'</b></div>'+
       '<div class="stat"><span class="small">Tracked changes</span><b>'+Number(s.total_actions||0)+'</b></div>';
     $('adminSessions').innerHTML=(data.sessions||[]).length?(data.sessions||[]).map(v=>
-      '<div class="admin-row"><div><b>'+esc(deviceLabel(v.device_id))+'</b><div class="small">'+esc(browserLabel(v.user_agent))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-row"><div><b>'+esc(v.display_name||deviceLabel(v.device_id))+'</b><div class="small">'+esc(browserLabel(v.user_agent))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
       '<div class="admin-right"><b>'+esc(fmtDuration(v.duration_seconds))+'</b><div class="small">Last '+new Date(v.last_seen).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
     ).join(''):'<div class="small">No visitor sessions have been logged yet.</div>';
     $('adminActivity').innerHTML=(data.activity||[]).length?(data.activity||[]).map(v=>
-      '<div class="admin-row"><div><b>'+esc(String(v.action_type||'').replaceAll('_',' '))+'</b><div class="small">'+esc(v.summary||v.entity_type||'Activity')+'</div><div class="small">'+esc(deviceLabel(v.device_id))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-row"><div><b>'+esc(String(v.action_type||'').replaceAll('_',' '))+'</b><div class="small">'+esc(v.summary||v.entity_type||'Activity')+'</div><div class="small">'+esc(v.display_name||deviceLabel(v.device_id))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
       '<div class="admin-right"><div class="small">'+new Date(v.occurred_at).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
     ).join(''):'<div class="small">No changes have been logged yet.</div>';
   }catch(e){
@@ -271,7 +354,7 @@ $('fab').onclick=()=>{
 };
 $('inviteButton').onclick=()=>joinWithCode($('inviteInput').value);
 $('inviteInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWithCode($('inviteInput').value)});
-loadCached();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+loadCached();render();setMemberStatus();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 (async()=>{if(inviteCode){$('inviteInput').value=inviteCode;const ok=await joinWithCode(inviteCode);if(!ok)$('inviteGate').hidden=false}else{$('inviteGate').hidden=false;setSync('Invite code required',false)}})();
 setInterval(()=>{if(joined&&!document.hidden)loadSharedState(true)},3000);
 setInterval(()=>{if(joined&&!document.hidden)logVisit('heartbeat')},30000);
