@@ -29,13 +29,36 @@ dialog{border:0;border-radius:22px;width:min(92vw,440px);padding:18px}dialog::ba
 input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;margin:6px 0 12px;font:inherit}.primary,.secondary{width:100%;padding:13px;border:0;border-radius:14px;font-weight:700;cursor:pointer}.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}.secondary{background:#eff1f6;color:#4d5664;margin-top:9px}
 .logo-card{display:flex;align-items:center;gap:12px;padding:12px 14px}.logo-card img{width:62px;height:62px;border-radius:14px;object-fit:contain;background:#fff;border:1px solid var(--line)}
 .logo-card .tagline{font-size:12px;color:var(--muted)}
+.course-assignments{margin-top:12px;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:14px}
+.course-assignment{display:grid;grid-template-columns:1fr auto;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.course-assignment:last-child{border-bottom:0}
+.course-assignment .due-date{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+.course-assignment.late .due-date{color:#c62828}
 </style></head><body>
 <div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
 <div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div></div></div>
 <section class="card" id="subjectsCard">
   <div class="between"><h2 style="margin:0">My Subjects</h2><span class="pill">4 courses</span></div>
-  <div class="item"><h3>ECO 2210 - Principles of Macroeconomics</h3><div class="small">Section SHO1C</div></div>
+  <div class="item">
+    <h3>ECO 2210 - Principles of Macroeconomics</h3>
+    <div class="small">Section SHO1C</div>
+    <div class="course-assignments">
+      <div class="course-assignment late"><div><strong>Exam 1</strong><div class="small">Content isn't available</div></div><div class="due-date">Sep 13</div></div>
+      <div class="course-assignment late"><div><strong>Journal Essay 1</strong></div><div class="due-date">Sep 19</div></div>
+      <div class="course-assignment late"><div><strong>APPLY Gross Domestic Product Digital Interactive</strong></div><div class="due-date">Sep 19</div></div>
+      <div class="course-assignment late"><div><strong>ASSESS Chapter 5 Homework</strong></div><div class="due-date">Sep 19</div></div>
+      <div class="course-assignment late"><div><strong>Chapter 5 end of Chapter Exercises</strong></div><div class="due-date">Sep 21</div></div>
+      <div class="course-assignment"><div><strong>APPLY Unemployment Digital Interactive</strong></div><div class="due-date">Sep 26</div></div>
+      <div class="course-assignment"><div><strong>APPLY Consumer Price Index and Inflation Digital Interactive</strong></div><div class="due-date">Sep 26</div></div>
+      <div class="course-assignment"><div><strong>ASSESS Chapter 6 Homework</strong></div><div class="due-date">Sep 26</div></div>
+      <div class="course-assignment"><div><strong>ASSESS Chapter 7 Homework</strong></div><div class="due-date">Oct 3</div></div>
+      <div class="course-assignment"><div><strong>ASSESS Chapter 8 Homework</strong></div><div class="due-date">Oct 10</div></div>
+      <div class="course-assignment"><div><strong>Exam 2</strong><div class="small">Content isn't available</div></div><div class="due-date">Oct 14</div></div>
+      <div class="course-assignment"><div><strong>Discussion Board Unit 9: Macroeconomic Metrics</strong><div class="small">Content isn't available • No participation</div></div><div class="due-date">Oct 17</div></div>
+      <div class="course-assignment"><div><strong>ASSESS Chapter 9 Homework</strong></div><div class="due-date">Oct 17</div></div>
+    </div>
+  </div>
   <div class="item"><h3>ENG 2211 - Business Communication</h3><div class="small">Section GT02C</div></div>
   <div class="item"><h3>MKT 2000 - Marketing Management</h3><div class="small">Section EE01C</div></div>
   <div class="item"><h3>BIO - Biology</h3><div class="small">Biology course</div></div>
