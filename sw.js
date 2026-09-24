@@ -1,4 +1,4 @@
-const CACHE="jk-study-v13-people-schedule";
+const CACHE="jk-study-v14-subject-cards";
 const ASSETS=["./","./index.html","./app.js","./manifest.webmanifest","./icon.png","./logo.png","./photo_couple.jpg","./photo_heart.jpg","./photo_woman.jpg","./photo_man.jpg"];
 self.addEventListener("install",e=>{self.skipWaiting();e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS)))});
 self.addEventListener("activate",e=>e.waitUntil(Promise.all([
