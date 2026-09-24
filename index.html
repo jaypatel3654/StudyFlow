@@ -67,7 +67,11 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <div class="small">Section GT02C</div>
     <div id="engSubjectAssignments"></div>
   </div>
-  <div class="item"><h3>MKT 2000 - Marketing Management</h3><div class="small">Section EE01C</div></div>
+  <div class="item">
+    <h3>MKT 2000 - Marketing Management</h3>
+    <div class="small">Section EE01C</div>
+    <div id="mktSubjectAssignments"></div>
+  </div>
   <div class="item"><h3>BIO - Biology</h3><div class="small">Biology course</div></div>
 </section>
 <section id="today" class="view active">
@@ -143,6 +147,24 @@ const engAssignments=[
 for(const item of engAssignments){
   const existing=A.find(x=>x.course===ENG2211 && x.title===item.title);
   if(!existing) A.push({id:id(),title:item.title,course:ENG2211,due:new Date(item.due).toISOString(),done:false,note:item.note||""});
+  else if(item.note && !existing.note) existing.note=item.note;
+}
+const MKT2000="MKT 2000 - Marketing Management (EE01C)";
+const mktAssignments=[
+  {title:"SUBMIT: Ch06- Business Market Characteristics and Behavior",due:"2026-09-17T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 06",due:"2026-09-18T23:59:00"},
+  {title:"SUBMIT: Ch07- Market Segments",due:"2026-09-24T23:59:00",note:"Unlimited attempts possible"},
+  {title:"SUBMIT: Ch07- Competitive Advantage",due:"2026-09-24T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 07",due:"2026-09-25T23:59:00",note:"2 attempts possible"},
+  {title:"SUBMIT: Ch08- Your Product/Service",due:"2026-10-01T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 08",due:"2026-10-02T23:59:00",note:"2 attempts possible"},
+  {title:"SUBMIT: Ch09- Describe the product life cycle of your main product/product line",due:"2026-10-08T23:59:00",note:"Unlimited attempts possible"},
+  {title:"SUBMIT: Ch10- Describe Internal factors affecting your pricing strategy",due:"2026-10-08T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 09",due:"2026-10-09T23:59:00",note:"2 attempts possible"}
+];
+for(const item of mktAssignments){
+  const existing=A.find(x=>x.course===MKT2000 && x.title===item.title);
+  if(!existing) A.push({id:id(),title:item.title,course:MKT2000,due:new Date(item.due).toISOString(),done:false,note:item.note||""});
   else if(item.note && !existing.note) existing.note=item.note;
 }
 save();
@@ -221,6 +243,22 @@ engSubjectAssignments.innerHTML=`
     <details class="folder">
       <summary>Past Assignments (${engPast.length})</summary>
       <div class="folder-body">${engPast.length?engPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ENG assignments.</span>'}</div>
+    </details>
+  </div>`;
+const mktFuture=futurePending.filter(x=>x.course===MKT2000);
+const mktPast=pastPending.filter(x=>x.course===MKT2000);
+const mktCompleted=completed.filter(x=>x.course===MKT2000);
+mktSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${mktFuture.length?mktFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming MKT assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${mktCompleted.length})</summary>
+      <div class="folder-body">${mktCompleted.length?mktCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed MKT assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${mktPast.length})</summary>
+      <div class="folder-body">${mktPast.length?mktPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due MKT assignments.</span>'}</div>
     </details>
   </div>`;
 glist.innerHTML=G.length?G.map(x=>{let q=Math.min(100,Math.round(x.done/x.target*100));return `<div class="item"><div class="between"><h3>${esc(x.title)}</h3><b>${q}%</b></div><div class="progress"><span style="width:${q}%"></span></div><div class="between" style="margin-top:9px"><span class="small">${fmt(x.done)} / ${fmt(x.target)}</span><span><button onclick="gm('${x.id}',-30)">−30m</button> <button onclick="gm('${x.id}',30)">+30m</button></span></div></div>`}).join(""):'<span class="small">No goals yet.</span>';
