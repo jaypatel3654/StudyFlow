@@ -29,58 +29,104 @@ dialog{border:0;border-radius:22px;width:min(92vw,440px);padding:18px}dialog::ba
 input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:13px;margin:6px 0 12px;font:inherit}.primary,.secondary{width:100%;padding:13px;border:0;border-radius:14px;font-weight:700;cursor:pointer}.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}.secondary{background:#eff1f6;color:#4d5664;margin-top:9px}
 .logo-card{display:flex;align-items:center;gap:12px;padding:12px 14px}.logo-card img{width:62px;height:62px;border-radius:14px;object-fit:contain;background:#fff;border:1px solid var(--line)}
 .logo-card .tagline{font-size:12px;color:var(--muted)}
+.course-assignments{margin-top:12px;padding:12px;background:#f8fafc;border:1px solid var(--line);border-radius:14px}
+.course-assignment{display:grid;grid-template-columns:1fr auto;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}
+.course-assignment:last-child{border-bottom:0}
+.course-assignment .due-date{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
+.course-assignment.late .due-date{color:#c62828}
+.status-pill,.priority-pill{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.status-completed{background:#e7f7f0;color:#117a55}
+.status-pending{background:#eef0ff;color:#4b57da}
+.status-past{background:#fdecec;color:#b42318}
+.priority-highest{background:#ffe7e7;color:#b42318}
+.priority-high{background:#fff3db;color:#9a6700}
+.priority-medium{background:#eef0ff;color:#4b57da}
+.priority-low{background:#eef7f0;color:#357a4a}
+.assignment-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.assignment-section-title{font-size:14px;font-weight:800;margin:4px 0 8px}
+.folder{border:1px solid var(--line);border-radius:14px;margin-top:12px;overflow:hidden;background:#fff}
+.folder summary{padding:12px 14px;font-weight:800;cursor:pointer;list-style:none}
+.folder summary::-webkit-details-marker{display:none}
+.folder summary:after{content:"⌄";float:right;color:var(--muted)}
+.folder[open] summary:after{content:"⌃"}
+.folder-body{padding:0 14px 8px}
+.priority-card{border:2px solid #ffd2d2;background:#fffafa}
 
 .memory-hero{position:relative;overflow:hidden;padding:0;background:#000;color:#fff}
-.memory-hero img{width:100%;height:260px;object-fit:cover;display:block;filter:saturate(1.03)}
-.memory-hero .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.62));display:flex;align-items:flex-end}
+.memory-hero img{width:100%;height:255px;object-fit:cover;display:block}
+.memory-hero .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.62));display:flex;align-items:flex-end}
 .memory-hero .copy{padding:20px}
-.memory-hero .kicker{display:inline-block;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700;margin-bottom:8px}
+.memory-hero .kicker{display:inline-block;background:rgba(255,255,255,.18);backdrop-filter:blur(10px);padding:6px 10px;border-radius:999px;font-size:12px;font-weight:800;margin-bottom:8px}
 .memory-hero h2{color:#fff;margin:0 0 6px;font-size:24px}
-.memory-hero p{margin:0;color:#edf4ff;font-size:14px;max-width:290px}
-.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.memory-hero p{margin:0;color:#f3f7ff;font-size:14px;max-width:300px}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0}
 .photo-card{overflow:hidden;padding:0}
-.photo-card img{width:100%;height:168px;display:block;object-fit:cover}
+.photo-card img{width:100%;height:190px;display:block;object-fit:cover}
 .photo-card .text{padding:12px 14px}
 .photo-card h3{margin:0 0 4px;font-size:15px}
-.photo-card .small{display:block}
-.wide-banner{overflow:hidden;padding:0;background:#fff}
-.wide-banner img{width:100%;height:170px;object-fit:cover;display:block}
-.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
-.soft-badge{background:#eef7ff;color:#0d5bb7;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:700}
+.wide-banner{overflow:hidden;padding:0}
+.wide-banner img{width:100%;height:175px;object-fit:cover;display:block}
 .quote-card{background:linear-gradient(135deg,#eff6ff,#eefaf4);border:1px solid var(--line)}
-.side-by-side{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.portrait-tall img{height:220px}
-@media (max-width:420px){.memory-hero img{height:230px}.photo-card img{height:150px}.portrait-tall img{height:190px}}
+@media (max-width:420px){.memory-hero img{height:225px}.photo-card img{height:165px}.wide-banner img{height:155px}}
 
 </style></head><body>
 <div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
 <div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div></div></div>
 <div class="card memory-hero">
-  <img src="photo_couple.jpg" alt="Couple smiling together outdoors">
-  <div class="overlay"><div class="copy"><div class="kicker">Personal Touch</div><h2>Study with heart</h2><p>Your app now feels more personal, warm, and motivating with your favorite memories.</p></div></div>
+  <img src="photo_couple.jpg" alt="Personal study motivation photo">
+  <div class="overlay"><div class="copy"><div class="kicker">Study Motivation</div><h2>Plan. Study. Grow.</h2><p>Keep your goals, deadlines, and the people who motivate you close.</p></div></div>
 </div>
-<section class="card wide-banner">
-  <img src="photo_heart.jpg" alt="Hands making a heart shape at the beach">
+<section class="card" id="subjectsCard">
+  <div class="between"><h2 style="margin:0">My Subjects</h2><span class="pill">4 courses</span></div>
+  <div class="item">
+    <h3>ECO 2210 - Principles of Macroeconomics</h3>
+    <div class="small">Section SHO1C</div>
+    <div id="ecoSubjectAssignments"></div>
+  </div>
+  <div class="item">
+    <h3>ENG 2211 - Business Communication</h3>
+    <div class="small">Section GT02C</div>
+    <div id="engSubjectAssignments"></div>
+  </div>
+  <div class="item">
+    <h3>MKT 2000 - Marketing Management</h3>
+    <div class="small">Section EE01C</div>
+    <div id="mktSubjectAssignments"></div>
+  </div>
+  <div class="item"><h3>BIO - Biology</h3><div class="small">Biology course</div></div>
 </section>
-
 <section id="today" class="view active">
 <div class="card"><div class="between"><div><div class="pill">TODAY</div><h2 id="ptext"></h2></div><b id="ppct"></b></div><div class="progress"><span id="pbar"></span></div></div>
 <div class="stats"><div class="stat"><span class="small">Study time</span><b id="stime"></b><span class="small">Completed tasks</span></div><div class="stat"><span class="small">Due soon</span><b id="dsoon"></b><span class="small">Next 7 days</span></div></div>
 <div class="photo-grid">
-  <div class="card photo-card portrait-tall"><img src="photo_woman.jpg" alt="Portrait photo"><div class="text"><h3>Your inspiration</h3><span class="small">Keep going — one assignment at a time.</span></div></div>
-  <div class="card photo-card portrait-tall"><img src="photo_man.jpg" alt="Portrait photo"><div class="text"><h3>Stay focused</h3><span class="small">Small daily effort leads to big progress.</span></div></div>
+  <div class="card photo-card"><img src="photo_woman.jpg" alt="Personal portrait"><div class="text"><h3>Keep going</h3><div class="small">One assignment at a time.</div></div></div>
+  <div class="card photo-card"><img src="photo_man.jpg" alt="Personal portrait"><div class="text"><h3>Stay focused</h3><div class="small">Small progress adds up.</div></div></div>
 </div>
 <h2>Study tasks</h2><div class="card" id="tasks"></div></section>
-<section id="assignments" class="view"><div class="between"><h2>Assignments</h2><span class="pill" id="acount"></span></div><div class="card" id="alist"></div></section>
-<section id="goals" class="view"><h2>Goals</h2><div class="card quote-card"><h3>Why this matters</h3><p class="small">Your goals are connected to your life, your loved ones, and your future. Let this space remind you why you started.</p></div><div class="card" id="glist"></div><button class="primary" onclick="openForm('goal')">Add goal</button></section>
-<section id="reports" class="view"><h2>Progress report</h2><div class="stats"><div class="stat"><span class="small">Tasks done</span><b id="rtasks"></b></div><div class="stat"><span class="small">Assignments done</span><b id="rassign"></b></div></div><div class="card"><h3>Overall task progress</h3><div class="progress" style="margin-top:12px"><span id="rbar"></span></div><p class="small" id="rtext"></p></div><div class="card quote-card"><h3>Motivation</h3><p class="small">“Plan, study, grow, succeed.” Use your memories as motivation and keep moving toward your goals.</p><div class="badge-row"><span class="soft-badge">Personalized design</span><span class="soft-badge">Photo memories</span><span class="soft-badge">Study motivation</span></div></div><div class="card"><h3>Offline use</h3><p class="small">Your data is saved on this iPhone. After the app loads once, it can open offline.</p></div></section>
+<section id="assignments" class="view">
+  <div class="between"><h2>Assignments</h2><span class="pill" id="acount"></span></div>
+  <div class="card">
+    <div class="assignment-section-title">Upcoming — sorted by priority</div>
+    <div id="upcomingList"></div>
+    <details class="folder" id="completedFolder">
+      <summary id="completedSummary">Completed</summary>
+      <div class="folder-body" id="completedList"></div>
+    </details>
+    <details class="folder" id="pastFolder">
+      <summary id="pastSummary">Past Assignments</summary>
+      <div class="folder-body" id="pastList"></div>
+    </details>
+  </div>
+</section>
+<section id="goals" class="view"><h2>Goals</h2><div class="card wide-banner"><img src="photo_heart.jpg" alt="Hands forming a heart at the beach"></div><div class="card quote-card"><h3>Your reason to keep going</h3><p class="small">Use your goals and favorite memories as motivation to stay consistent throughout the semester.</p></div><div class="card" id="glist"></div><button class="primary" onclick="openForm('goal')">Add goal</button></section>
+<section id="reports" class="view"><h2>Progress report</h2><div class="stats"><div class="stat"><span class="small">Tasks done</span><b id="rtasks"></b></div><div class="stat"><span class="small">Assignments done</span><b id="rassign"></b></div></div><div class="card"><h3>Overall task progress</h3><div class="progress" style="margin-top:12px"><span id="rbar"></span></div><p class="small" id="rtext"></p></div><div class="card"><h3>Offline use</h3><p class="small">Your data is saved on this iPhone. After the app loads once, it can open offline.</p></div></section>
 </main>
 <button class="fab" id="fab">+</button>
 <nav><button class="activeTab" data-v="today">⌂<span>Today</span></button><button data-v="assignments">✓<span>Assignments</span></button><button data-v="goals">◎<span>Goals</span></button><button data-v="reports">▥<span>Reports</span></button></nav>
 <dialog id="dlg"><h2 id="dtitle"></h2>
-<div id="fa"><input id="at" placeholder="Assignment title"><select id="ac"><option>Economics</option><option>Accounting</option><option>Business</option><option>Math</option><option>Science</option><option>Other</option></select><input id="ad" type="datetime-local"><button class="primary" onclick="saveA()">Save assignment</button></div>
-<div id="ft" hidden><input id="tt" placeholder="Study task"><select id="tc"><option>Economics</option><option>Accounting</option><option>Business</option><option>Math</option><option>Science</option><option>Other</option></select><input id="tm" type="number" min="5" max="240" step="5" value="30"><button class="primary" onclick="saveT()">Save study task</button></div>
+<div id="fa"><input id="at" placeholder="Assignment title"><select id="ac"><option>ECO 2210 - Principles of Macroeconomics (SHO1C)</option><option>ENG 2211 - Business Communication (GT02C)</option><option>MKT 2000 - Marketing Management (EE01C)</option><option>BIO - Biology</option><option>Other</option></select><input id="ad" type="datetime-local"><button class="primary" onclick="saveA()">Save assignment</button></div>
+<div id="ft" hidden><input id="tt" placeholder="Study task"><select id="tc"><option>ECO 2210 - Principles of Macroeconomics (SHO1C)</option><option>ENG 2211 - Business Communication (GT02C)</option><option>MKT 2000 - Marketing Management (EE01C)</option><option>BIO - Biology</option><option>Other</option></select><input id="tm" type="number" min="5" max="240" step="5" value="30"><button class="primary" onclick="saveT()">Save study task</button></div>
 <div id="fg" hidden><input id="gt" placeholder="Goal name"><input id="gh" type="number" min="1" max="80" value="5"><button class="primary" onclick="saveG()">Save goal</button></div>
 <button class="secondary" onclick="dlg.close()">Cancel</button></dialog></div>
 <script>
@@ -88,11 +134,159 @@ const K={a:"sf.a",t:"sf.t",g:"sf.g"},get=(k,d)=>{try{return JSON.parse(localStor
 let A=get(K.a,[{id:id(),title:"Elasticity homework",course:"Economics",due:new Date(Date.now()+86400000).toISOString(),done:false},{id:id(),title:"Job costing worksheet",course:"Accounting",due:new Date(Date.now()+3*86400000).toISOString(),done:false}]);
 let T=get(K.t,[{id:id(),title:"Review supply & demand graphs",course:"Economics",minutes:35,done:false},{id:id(),title:"Practice elasticity calculations",course:"Economics",minutes:45,done:false}]);
 let G=get(K.g,[{id:id(),title:"Study 15 hours this week",target:900,done:360}]);
+const ECO2210="ECO 2210 - Principles of Macroeconomics (SHO1C)";
+const ecoAssignments=[
+  {title:"Exam 1",due:"2026-09-13T23:59:00"},
+  {title:"Journal Essay 1",due:"2026-09-19T23:59:00"},
+  {title:"APPLY Gross Domestic Product Digital Interactive",due:"2026-09-19T23:59:00"},
+  {title:"ASSESS Chapter 5 Homework",due:"2026-09-19T23:59:00"},
+  {title:"Chapter 5 end of Chapter Exercises",due:"2026-09-21T23:59:00"},
+  {title:"APPLY Unemployment Digital Interactive",due:"2026-09-26T23:59:00"},
+  {title:"APPLY Consumer Price Index and Inflation Digital Interactive",due:"2026-09-26T23:59:00"},
+  {title:"ASSESS Chapter 6 Homework",due:"2026-09-26T23:59:00"},
+  {title:"ASSESS Chapter 7 Homework",due:"2026-10-03T23:59:00"},
+  {title:"ASSESS Chapter 8 Homework",due:"2026-10-10T23:59:00"},
+  {title:"Exam 2",due:"2026-10-14T23:59:00"},
+  {title:"Discussion Board Unit 9: Macroeconomic Metrics",due:"2026-10-17T23:59:00"},
+  {title:"ASSESS Chapter 9 Homework",due:"2026-10-17T23:59:00"}
+];
+for(const item of ecoAssignments){
+  const exists=A.some(x=>x.course===ECO2210 && x.title===item.title);
+  if(!exists) A.push({id:id(),title:item.title,course:ECO2210,due:new Date(item.due).toISOString(),done:false});
+}
+const ENG2211="ENG 2211 - Business Communication (GT02C)";
+const engAssignments=[
+  {title:"APPLY: Chapter 4 Grammar Check Quiz (8 pts)",due:"2026-09-14T23:59:00"},
+  {title:"APPLY: CH 5 Skills-Building Exercise #9 (27 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: CH 5 Critical-Thinking Question #1 (10 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: Chapter 5 Grammar Check Quiz (8 pts.)",due:"2026-09-21T23:59:00"},
+  {title:"APPLY: CH 6 Skills-Building Exercises (79 pts.)",due:"2026-09-28T23:59:00",note:"Unlimited attempts possible"},
+  {title:"Quiz #3 Chapters 5 and 6 (25 pts.)",due:"2026-09-28T23:59:00"},
+  {title:"APPLY: Chapter 6 Grammar Check Quiz (8 pts.)",due:"2026-09-28T23:59:00"},
+  {title:"APPLY: CH 7 Problem-Solving Case #4 (100 pts.; eligible for revision)",due:"2026-10-05T23:59:00",note:"Unlimited attempts possible"},
+  {title:"APPLY: Chapter 7 Grammar Check Quiz (8 pts.)",due:"2026-10-05T23:59:00"},
+  {title:"APPLY: CH 8 Problem-Solving Case #24 (100 pts.; eligible for revision)",due:"2026-10-12T23:59:00",note:"Unlimited attempts possible"},
+  {title:"APPLY: Quiz #4 Chapters 7 and 8",due:"2026-10-12T23:59:00"},
+  {title:"APPLY: Chapter 8 Grammar Check Quiz (8 pts.)",due:"2026-10-12T23:59:00"},
+  {title:"APPLY: CH 9 Critical-Thinking Question #1 (10 pts.)",due:"2026-10-19T23:59:00"}
+];
+for(const item of engAssignments){
+  const existing=A.find(x=>x.course===ENG2211 && x.title===item.title);
+  if(!existing) A.push({id:id(),title:item.title,course:ENG2211,due:new Date(item.due).toISOString(),done:false,note:item.note||""});
+  else if(item.note && !existing.note) existing.note=item.note;
+}
+const MKT2000="MKT 2000 - Marketing Management (EE01C)";
+const mktAssignments=[
+  {title:"SUBMIT: Ch06- Business Market Characteristics and Behavior",due:"2026-09-17T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 06",due:"2026-09-18T23:59:00"},
+  {title:"SUBMIT: Ch07- Market Segments",due:"2026-09-24T23:59:00",note:"Unlimited attempts possible"},
+  {title:"SUBMIT: Ch07- Competitive Advantage",due:"2026-09-24T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 07",due:"2026-09-25T23:59:00",note:"2 attempts possible"},
+  {title:"SUBMIT: Ch08- Your Product/Service",due:"2026-10-01T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 08",due:"2026-10-02T23:59:00",note:"2 attempts possible"},
+  {title:"SUBMIT: Ch09- Describe the product life cycle of your main product/product line",due:"2026-10-08T23:59:00",note:"Unlimited attempts possible"},
+  {title:"SUBMIT: Ch10- Describe Internal factors affecting your pricing strategy",due:"2026-10-08T23:59:00",note:"Unlimited attempts possible"},
+  {title:"TAKE: Quiz 09",due:"2026-10-09T23:59:00",note:"2 attempts possible"}
+];
+for(const item of mktAssignments){
+  const existing=A.find(x=>x.course===MKT2000 && x.title===item.title);
+  if(!existing) A.push({id:id(),title:item.title,course:MKT2000,due:new Date(item.due).toISOString(),done:false,note:item.note||""});
+  else if(item.note && !existing.note) existing.note=item.note;
+}
+save();
 const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m])),fmt=m=>m<60?m+"m":Math.floor(m/60)+"h "+m%60+"m";
 function save(){localStorage.setItem(K.a,JSON.stringify(A));localStorage.setItem(K.t,JSON.stringify(T));localStorage.setItem(K.g,JSON.stringify(G))}
 function render(){date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});let d=T.filter(x=>x.done).length,p=T.length?Math.round(d/T.length*100):0;ptext.textContent=`${d} of ${T.length} tasks completed`;ppct.textContent=p+"%";pbar.style.width=p+"%";stime.textContent=fmt(T.filter(x=>x.done).reduce((s,x)=>s+x.minutes,0));dsoon.textContent=A.filter(x=>!x.done&&new Date(x.due)>=new Date()&&new Date(x.due)<=new Date(Date.now()+7*86400000)).length;
 tasks.innerHTML=T.length?T.map(x=>`<div class="item row"><button class="check ${x.done?"on":""}" onclick="toggleT('${x.id}')">${x.done?"✓":""}</button><div style="flex:1"><h3 style="${x.done?"text-decoration:line-through;opacity:.55":""}">${esc(x.title)}</h3><div class="small">${esc(x.course)} • ${x.minutes} min</div></div><button class="icon danger" onclick="delT('${x.id}')">⌫</button></div>`).join(""):'<span class="small">No study tasks yet.</span>';
-let active=A.filter(x=>!x.done).length;acount.textContent=active+" active";alist.innerHTML=A.length?A.sort((a,b)=>Number(a.done)-Number(b.done)||new Date(a.due)-new Date(b.due)).map(x=>`<div class="item row"><button class="check ${x.done?"on":""}" onclick="toggleA('${x.id}')">${x.done?"✓":""}</button><div style="flex:1"><h3 style="${x.done?"text-decoration:line-through;opacity:.55":""}">${esc(x.title)}</h3><div class="small">${esc(x.course)} • ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div></div><button class="icon danger" onclick="delA('${x.id}')">⌫</button></div>`).join(""):'<span class="small">No assignments yet.</span>';
+
+const now=new Date();
+const futurePending=A.filter(x=>!x.done && new Date(x.due)>=now).sort((a,b)=>new Date(a.due)-new Date(b.due));
+const pastPending=A.filter(x=>!x.done && new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due));
+const completed=A.filter(x=>x.done).sort((a,b)=>new Date(b.due)-new Date(a.due));
+const isExam=x=>/\bexam\b/i.test(x.title);
+const nonExamUpcoming=futurePending.filter(x=>!isExam(x));
+const examUpcoming=futurePending.filter(isExam);
+const nearestAssignmentDue=nonExamUpcoming.length?new Date(nonExamUpcoming[0].due).getTime():null;
+const nearestExamDue=examUpcoming.length?new Date(examUpcoming[0].due).getTime():null;
+function priorityInfo(x){
+  const due=new Date(x.due).getTime();
+  if((!isExam(x)&&nearestAssignmentDue!==null&&due===nearestAssignmentDue)||(isExam(x)&&nearestExamDue!==null&&due===nearestExamDue)) return {label:"Highest priority",cls:"priority-highest",rank:0};
+  const days=(due-now.getTime())/86400000;
+  if(days<=7) return {label:"High priority",cls:"priority-high",rank:1};
+  if(days<=14) return {label:"Medium priority",cls:"priority-medium",rank:2};
+  return {label:"Low priority",cls:"priority-low",rank:3};
+}
+futurePending.sort((a,b)=>priorityInfo(a).rank-priorityInfo(b).rank||new Date(a.due)-new Date(b.due));
+function assignmentRow(x,mode){
+  const p=mode==="upcoming"?priorityInfo(x):null;
+  const status=x.done?'<span class="status-pill status-completed">Completed</span>':mode==="past"?'<span class="status-pill status-past">Past due</span>':'<span class="status-pill status-pending">Pending</span>';
+  const priority=p?'<span class="priority-pill '+p.cls+'">'+p.label+'</span>':'';
+  return `<div class="item row ${p&&p.rank===0?"priority-card":""}">
+    <button class="check ${x.done?"on":""}" aria-label="${x.done?"Mark not done":"Mark done"}" onclick="toggleA('${x.id}')">${x.done?"✓":""}</button>
+    <div style="flex:1">
+      <h3 style="${x.done?"text-decoration:line-through;opacity:.65":""}">${esc(x.title)}</h3>
+      <div class="small">${esc(x.course)} • Due ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div>
+      ${x.note?'<div class="small" style="margin-top:4px">'+esc(x.note)+'</div>':''}
+      <div class="assignment-meta">${status}${priority}</div>
+    </div>
+    <button class="icon danger" aria-label="Delete assignment" onclick="delA('${x.id}')">⌫</button>
+  </div>`;
+}
+acount.textContent=futurePending.length+" upcoming";
+upcomingList.innerHTML=futurePending.length?futurePending.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming assignments.</span>';
+completedSummary.textContent="Completed ("+completed.length+")";
+completedList.innerHTML=completed.length?completed.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed assignments yet.</span>';
+pastSummary.textContent="Past Assignments ("+pastPending.length+")";
+pastList.innerHTML=pastPending.length?pastPending.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due assignments.</span>';
+
+const ecoFuture=futurePending.filter(x=>x.course===ECO2210);
+const ecoPast=pastPending.filter(x=>x.course===ECO2210);
+const ecoCompleted=completed.filter(x=>x.course===ECO2210);
+ecoSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${ecoFuture.length?ecoFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming ECO assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${ecoCompleted.length})</summary>
+      <div class="folder-body">${ecoCompleted.length?ecoCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed ECO assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${ecoPast.length})</summary>
+      <div class="folder-body">${ecoPast.length?ecoPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ECO assignments.</span>'}</div>
+    </details>
+  </div>`;
+const engFuture=futurePending.filter(x=>x.course===ENG2211);
+const engPast=pastPending.filter(x=>x.course===ENG2211);
+const engCompleted=completed.filter(x=>x.course===ENG2211);
+engSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${engFuture.length?engFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming ENG assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${engCompleted.length})</summary>
+      <div class="folder-body">${engCompleted.length?engCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed ENG assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${engPast.length})</summary>
+      <div class="folder-body">${engPast.length?engPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ENG assignments.</span>'}</div>
+    </details>
+  </div>`;
+const mktFuture=futurePending.filter(x=>x.course===MKT2000);
+const mktPast=pastPending.filter(x=>x.course===MKT2000);
+const mktCompleted=completed.filter(x=>x.course===MKT2000);
+mktSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${mktFuture.length?mktFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming MKT assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${mktCompleted.length})</summary>
+      <div class="folder-body">${mktCompleted.length?mktCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed MKT assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${mktPast.length})</summary>
+      <div class="folder-body">${mktPast.length?mktPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due MKT assignments.</span>'}</div>
+    </details>
+  </div>`;
 glist.innerHTML=G.length?G.map(x=>{let q=Math.min(100,Math.round(x.done/x.target*100));return `<div class="item"><div class="between"><h3>${esc(x.title)}</h3><b>${q}%</b></div><div class="progress"><span style="width:${q}%"></span></div><div class="between" style="margin-top:9px"><span class="small">${fmt(x.done)} / ${fmt(x.target)}</span><span><button onclick="gm('${x.id}',-30)">−30m</button> <button onclick="gm('${x.id}',30)">+30m</button></span></div></div>`}).join(""):'<span class="small">No goals yet.</span>';
 rtasks.textContent=d;rassign.textContent=A.filter(x=>x.done).length;rbar.style.width=p+"%";rtext.textContent=p+"% of your current study tasks are complete.";save()}
 function toggleT(i){let x=T.find(x=>x.id===i);x.done=!x.done;render()} function delT(i){T=T.filter(x=>x.id!==i);render()} function toggleA(i){let x=A.find(x=>x.id===i);x.done=!x.done;render()} function delA(i){A=A.filter(x=>x.id!==i);render()} function gm(i,n){let x=G.find(x=>x.id===i);x.done=Math.max(0,x.done+n);render()}
