@@ -34,6 +34,23 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .course-assignment:last-child{border-bottom:0}
 .course-assignment .due-date{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap}
 .course-assignment.late .due-date{color:#c62828}
+.status-pill,.priority-pill{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.status-completed{background:#e7f7f0;color:#117a55}
+.status-pending{background:#eef0ff;color:#4b57da}
+.status-past{background:#fdecec;color:#b42318}
+.priority-highest{background:#ffe7e7;color:#b42318}
+.priority-high{background:#fff3db;color:#9a6700}
+.priority-medium{background:#eef0ff;color:#4b57da}
+.priority-low{background:#eef7f0;color:#357a4a}
+.assignment-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.assignment-section-title{font-size:14px;font-weight:800;margin:4px 0 8px}
+.folder{border:1px solid var(--line);border-radius:14px;margin-top:12px;overflow:hidden;background:#fff}
+.folder summary{padding:12px 14px;font-weight:800;cursor:pointer;list-style:none}
+.folder summary::-webkit-details-marker{display:none}
+.folder summary:after{content:"⌄";float:right;color:var(--muted)}
+.folder[open] summary:after{content:"⌃"}
+.folder-body{padding:0 14px 8px}
+.priority-card{border:2px solid #ffd2d2;background:#fffafa}
 </style></head><body>
 <div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
@@ -43,21 +60,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   <div class="item">
     <h3>ECO 2210 - Principles of Macroeconomics</h3>
     <div class="small">Section SHO1C</div>
-    <div class="course-assignments">
-      <div class="course-assignment late"><div><strong>Exam 1</strong><div class="small">Content isn't available</div></div><div class="due-date">Sep 13</div></div>
-      <div class="course-assignment late"><div><strong>Journal Essay 1</strong></div><div class="due-date">Sep 19</div></div>
-      <div class="course-assignment late"><div><strong>APPLY Gross Domestic Product Digital Interactive</strong></div><div class="due-date">Sep 19</div></div>
-      <div class="course-assignment late"><div><strong>ASSESS Chapter 5 Homework</strong></div><div class="due-date">Sep 19</div></div>
-      <div class="course-assignment late"><div><strong>Chapter 5 end of Chapter Exercises</strong></div><div class="due-date">Sep 21</div></div>
-      <div class="course-assignment"><div><strong>APPLY Unemployment Digital Interactive</strong></div><div class="due-date">Sep 26</div></div>
-      <div class="course-assignment"><div><strong>APPLY Consumer Price Index and Inflation Digital Interactive</strong></div><div class="due-date">Sep 26</div></div>
-      <div class="course-assignment"><div><strong>ASSESS Chapter 6 Homework</strong></div><div class="due-date">Sep 26</div></div>
-      <div class="course-assignment"><div><strong>ASSESS Chapter 7 Homework</strong></div><div class="due-date">Oct 3</div></div>
-      <div class="course-assignment"><div><strong>ASSESS Chapter 8 Homework</strong></div><div class="due-date">Oct 10</div></div>
-      <div class="course-assignment"><div><strong>Exam 2</strong><div class="small">Content isn't available</div></div><div class="due-date">Oct 14</div></div>
-      <div class="course-assignment"><div><strong>Discussion Board Unit 9: Macroeconomic Metrics</strong><div class="small">Content isn't available • No participation</div></div><div class="due-date">Oct 17</div></div>
-      <div class="course-assignment"><div><strong>ASSESS Chapter 9 Homework</strong></div><div class="due-date">Oct 17</div></div>
-    </div>
+    <div id="ecoSubjectAssignments"></div>
   </div>
   <div class="item"><h3>ENG 2211 - Business Communication</h3><div class="small">Section GT02C</div></div>
   <div class="item"><h3>MKT 2000 - Marketing Management</h3><div class="small">Section EE01C</div></div>
@@ -67,7 +70,21 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 <div class="card"><div class="between"><div><div class="pill">TODAY</div><h2 id="ptext"></h2></div><b id="ppct"></b></div><div class="progress"><span id="pbar"></span></div></div>
 <div class="stats"><div class="stat"><span class="small">Study time</span><b id="stime"></b><span class="small">Completed tasks</span></div><div class="stat"><span class="small">Due soon</span><b id="dsoon"></b><span class="small">Next 7 days</span></div></div>
 <h2>Study tasks</h2><div class="card" id="tasks"></div></section>
-<section id="assignments" class="view"><div class="between"><h2>Assignments</h2><span class="pill" id="acount"></span></div><div class="card" id="alist"></div></section>
+<section id="assignments" class="view">
+  <div class="between"><h2>Assignments</h2><span class="pill" id="acount"></span></div>
+  <div class="card">
+    <div class="assignment-section-title">Upcoming — sorted by priority</div>
+    <div id="upcomingList"></div>
+    <details class="folder" id="completedFolder">
+      <summary id="completedSummary">Completed</summary>
+      <div class="folder-body" id="completedList"></div>
+    </details>
+    <details class="folder" id="pastFolder">
+      <summary id="pastSummary">Past Assignments</summary>
+      <div class="folder-body" id="pastList"></div>
+    </details>
+  </div>
+</section>
 <section id="goals" class="view"><h2>Goals</h2><div class="card" id="glist"></div><button class="primary" onclick="openForm('goal')">Add goal</button></section>
 <section id="reports" class="view"><h2>Progress report</h2><div class="stats"><div class="stat"><span class="small">Tasks done</span><b id="rtasks"></b></div><div class="stat"><span class="small">Assignments done</span><b id="rassign"></b></div></div><div class="card"><h3>Overall task progress</h3><div class="progress" style="margin-top:12px"><span id="rbar"></span></div><p class="small" id="rtext"></p></div><div class="card"><h3>Offline use</h3><p class="small">Your data is saved on this iPhone. After the app loads once, it can open offline.</p></div></section>
 </main>
@@ -108,7 +125,62 @@ const esc=s=>String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;"
 function save(){localStorage.setItem(K.a,JSON.stringify(A));localStorage.setItem(K.t,JSON.stringify(T));localStorage.setItem(K.g,JSON.stringify(G))}
 function render(){date.textContent=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});let d=T.filter(x=>x.done).length,p=T.length?Math.round(d/T.length*100):0;ptext.textContent=`${d} of ${T.length} tasks completed`;ppct.textContent=p+"%";pbar.style.width=p+"%";stime.textContent=fmt(T.filter(x=>x.done).reduce((s,x)=>s+x.minutes,0));dsoon.textContent=A.filter(x=>!x.done&&new Date(x.due)>=new Date()&&new Date(x.due)<=new Date(Date.now()+7*86400000)).length;
 tasks.innerHTML=T.length?T.map(x=>`<div class="item row"><button class="check ${x.done?"on":""}" onclick="toggleT('${x.id}')">${x.done?"✓":""}</button><div style="flex:1"><h3 style="${x.done?"text-decoration:line-through;opacity:.55":""}">${esc(x.title)}</h3><div class="small">${esc(x.course)} • ${x.minutes} min</div></div><button class="icon danger" onclick="delT('${x.id}')">⌫</button></div>`).join(""):'<span class="small">No study tasks yet.</span>';
-let active=A.filter(x=>!x.done).length;acount.textContent=active+" active";alist.innerHTML=A.length?A.sort((a,b)=>Number(a.done)-Number(b.done)||new Date(a.due)-new Date(b.due)).map(x=>`<div class="item row"><button class="check ${x.done?"on":""}" onclick="toggleA('${x.id}')">${x.done?"✓":""}</button><div style="flex:1"><h3 style="${x.done?"text-decoration:line-through;opacity:.55":""}">${esc(x.title)}</h3><div class="small">${esc(x.course)} • ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div></div><button class="icon danger" onclick="delA('${x.id}')">⌫</button></div>`).join(""):'<span class="small">No assignments yet.</span>';
+
+const now=new Date();
+const futurePending=A.filter(x=>!x.done && new Date(x.due)>=now).sort((a,b)=>new Date(a.due)-new Date(b.due));
+const pastPending=A.filter(x=>!x.done && new Date(x.due)<now).sort((a,b)=>new Date(b.due)-new Date(a.due));
+const completed=A.filter(x=>x.done).sort((a,b)=>new Date(b.due)-new Date(a.due));
+const isExam=x=>/\bexam\b/i.test(x.title);
+const nonExamUpcoming=futurePending.filter(x=>!isExam(x));
+const examUpcoming=futurePending.filter(isExam);
+const nearestAssignmentDue=nonExamUpcoming.length?new Date(nonExamUpcoming[0].due).getTime():null;
+const nearestExamDue=examUpcoming.length?new Date(examUpcoming[0].due).getTime():null;
+function priorityInfo(x){
+  const due=new Date(x.due).getTime();
+  if((!isExam(x)&&nearestAssignmentDue!==null&&due===nearestAssignmentDue)||(isExam(x)&&nearestExamDue!==null&&due===nearestExamDue)) return {label:"Highest priority",cls:"priority-highest",rank:0};
+  const days=(due-now.getTime())/86400000;
+  if(days<=7) return {label:"High priority",cls:"priority-high",rank:1};
+  if(days<=14) return {label:"Medium priority",cls:"priority-medium",rank:2};
+  return {label:"Low priority",cls:"priority-low",rank:3};
+}
+futurePending.sort((a,b)=>priorityInfo(a).rank-priorityInfo(b).rank||new Date(a.due)-new Date(b.due));
+function assignmentRow(x,mode){
+  const p=mode==="upcoming"?priorityInfo(x):null;
+  const status=x.done?'<span class="status-pill status-completed">Completed</span>':mode==="past"?'<span class="status-pill status-past">Past due</span>':'<span class="status-pill status-pending">Pending</span>';
+  const priority=p?'<span class="priority-pill '+p.cls+'">'+p.label+'</span>':'';
+  return `<div class="item row ${p&&p.rank===0?"priority-card":""}">
+    <button class="check ${x.done?"on":""}" aria-label="${x.done?"Mark not done":"Mark done"}" onclick="toggleA('${x.id}')">${x.done?"✓":""}</button>
+    <div style="flex:1">
+      <h3 style="${x.done?"text-decoration:line-through;opacity:.65":""}">${esc(x.title)}</h3>
+      <div class="small">${esc(x.course)} • Due ${new Date(x.due).toLocaleString([], {dateStyle:"medium",timeStyle:"short"})}</div>
+      <div class="assignment-meta">${status}${priority}</div>
+    </div>
+    <button class="icon danger" aria-label="Delete assignment" onclick="delA('${x.id}')">⌫</button>
+  </div>`;
+}
+acount.textContent=futurePending.length+" upcoming";
+upcomingList.innerHTML=futurePending.length?futurePending.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming assignments.</span>';
+completedSummary.textContent="Completed ("+completed.length+")";
+completedList.innerHTML=completed.length?completed.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed assignments yet.</span>';
+pastSummary.textContent="Past Assignments ("+pastPending.length+")";
+pastList.innerHTML=pastPending.length?pastPending.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due assignments.</span>';
+
+const ecoFuture=futurePending.filter(x=>x.course===ECO2210);
+const ecoPast=pastPending.filter(x=>x.course===ECO2210);
+const ecoCompleted=completed.filter(x=>x.course===ECO2210);
+ecoSubjectAssignments.innerHTML=`
+  <div class="course-assignments">
+    <div class="assignment-section-title">Upcoming</div>
+    ${ecoFuture.length?ecoFuture.map(x=>assignmentRow(x,"upcoming")).join(""):'<span class="small">No upcoming ECO assignments.</span>'}
+    <details class="folder">
+      <summary>Completed (${ecoCompleted.length})</summary>
+      <div class="folder-body">${ecoCompleted.length?ecoCompleted.map(x=>assignmentRow(x,"completed")).join(""):'<span class="small">No completed ECO assignments.</span>'}</div>
+    </details>
+    <details class="folder">
+      <summary>Past Assignments (${ecoPast.length})</summary>
+      <div class="folder-body">${ecoPast.length?ecoPast.map(x=>assignmentRow(x,"past")).join(""):'<span class="small">No past-due ECO assignments.</span>'}</div>
+    </details>
+  </div>`;
 glist.innerHTML=G.length?G.map(x=>{let q=Math.min(100,Math.round(x.done/x.target*100));return `<div class="item"><div class="between"><h3>${esc(x.title)}</h3><b>${q}%</b></div><div class="progress"><span style="width:${q}%"></span></div><div class="between" style="margin-top:9px"><span class="small">${fmt(x.done)} / ${fmt(x.target)}</span><span><button onclick="gm('${x.id}',-30)">−30m</button> <button onclick="gm('${x.id}',30)">+30m</button></span></div></div>`}).join(""):'<span class="small">No goals yet.</span>';
 rtasks.textContent=d;rassign.textContent=A.filter(x=>x.done).length;rbar.style.width=p+"%";rtext.textContent=p+"% of your current study tasks are complete.";save()}
 function toggleT(i){let x=T.find(x=>x.id===i);x.done=!x.done;render()} function delT(i){T=T.filter(x=>x.id!==i);render()} function toggleA(i){let x=A.find(x=>x.id===i);x.done=!x.done;render()} function delA(i){A=A.filter(x=>x.id!==i);render()} function gm(i,n){let x=G.find(x=>x.id===i);x.done=Math.max(0,x.done+n);render()}
