@@ -2,12 +2,17 @@ const SUPABASE_URL='https://cfiwsgqcoeddqqukgxho.supabase.co';
 const SUPABASE_KEY='sb_publishable_xExXRjTfzng1z4sa_bsGFg_EQ-ai6RO';
 const INVITE_KEY='jk.shared.invite.v1';
 const CACHE_KEY='jk.shared.cache.v1';
+const DEVICE_KEY='jk.shared.device.v1';
+const ADMIN_SESSION_KEY='jk.admin.code.v1';
 const ECO2210='ECO 2210 - Principles of Macroeconomics (SHO1C)';
 const ENG2211='ENG 2211 - Business Communication (GT02C)';
 const MKT2000='MKT 2000 - Marketing Management (EE01C)';
 const BIO='BIO - Biology';
 const $=id=>document.getElementById(id);
 let inviteCode=localStorage.getItem(INVITE_KEY)||'';
+let deviceId=localStorage.getItem(DEVICE_KEY)||'';
+if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem(DEVICE_KEY,deviceId)}
+const sessionId=crypto.randomUUID();
 let A=[],T=[],G=[],joined=false,loading=false;
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt=m=>m<60?m+'m':Math.floor(m/60)+'h '+(m%60)+'m';
@@ -27,24 +32,63 @@ function setSync(text,ok=true){const el=$('syncStatus');if(el)el.textContent=tex
 function applyState(state){A=Array.isArray(state.assignments)?state.assignments:[];T=Array.isArray(state.tasks)?state.tasks:[];G=Array.isArray(state.goals)?state.goals.map(g=>Object.assign({},g,{target:g.target_minutes,done:g.done_minutes})):[];localStorage.setItem(CACHE_KEY,JSON.stringify(state));render()}
 function loadCached(){try{const c=JSON.parse(localStorage.getItem(CACHE_KEY)||'null');if(c)applyState(c)}catch{}}
 async function verifyInvite(code){return await rpc('app_verify_invite',{p_code:code})}
+async function logVisit(event='heartbeat'){
+  if(!joined||!inviteCode)return;
+  try{await rpc('app_log_visit',{p_code:inviteCode,p_device_id:deviceId,p_session_id:sessionId,p_event:event})}catch{}
+}
+async function logAction(action,entityType,entityId,summary){
+  if(!joined||!inviteCode)return;
+  try{
+    await rpc('app_log_action',{
+      p_code:inviteCode,
+      p_device_id:deviceId,
+      p_session_id:sessionId,
+      p_action_type:action,
+      p_entity_type:entityType||null,
+      p_entity_id:entityId||null,
+      p_summary:summary||null
+    })
+  }catch{}
+}
+function deviceLabel(id){return id?'Device '+String(id).slice(-8).toUpperCase():'Unknown device'}
+function fmtDuration(sec){
+  sec=Math.max(0,Number(sec)||0);
+  if(sec<60)return Math.round(sec)+' sec';
+  if(sec<3600)return Math.floor(sec/60)+'m '+Math.round(sec%60)+'s';
+  return Math.floor(sec/3600)+'h '+Math.floor((sec%3600)/60)+'m'
+}
+function browserLabel(ua){
+  ua=String(ua||'');
+  const device=/iPhone/i.test(ua)?'iPhone':/iPad/i.test(ua)?'iPad':/Android/i.test(ua)?'Android':/Macintosh/i.test(ua)?'Mac':/Windows/i.test(ua)?'Windows':'Device';
+  const browser=/CriOS|Chrome/i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':/Firefox/i.test(ua)?'Firefox':'Browser';
+  return device+' • '+browser
+}
 async function joinWithCode(code){
   const clean=String(code||'').trim().toUpperCase(); if(!clean)return false;
   $('inviteError').textContent='Checking code…';
   try{
     const ok=await verifyInvite(clean);
     if(!ok){$('inviteError').textContent='That invite code is not valid.';return false}
-    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await loadSharedState(false);return true
+    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await loadSharedState(false);logVisit('start');return true
   }catch(e){$('inviteError').textContent='Could not connect. Check your internet and try again.';return false}
 }
 async function loadSharedState(silent=true){
   if(!joined||loading||!inviteCode)return;loading=true;if(!silent)setSync('Syncing…');
   try{const state=await rpc('app_get_state',{p_code:inviteCode});applyState(state||{});setSync('Shared • Live')}catch(e){setSync('Offline • showing last sync',false)}finally{loading=false}
 }
-async function mutate(name,args){
-  if(!joined){$('inviteGate').hidden=false;return}
+async function mutate(name,args,logMeta){
+  if(!joined){$('inviteGate').hidden=false;return null}
   setSync('Saving…');
-  try{await rpc(name,Object.assign({p_code:inviteCode},args||{}));await loadSharedState(false)}
-  catch(e){alert(e.message||'Could not save the change.');setSync('Sync problem',false)}
+  try{
+    const result=await rpc(name,Object.assign({p_code:inviteCode},args||{}));
+    if(logMeta){
+      const entityId=logMeta.entityId||((typeof result==='string'&&/^[0-9a-f-]{36}$/i.test(result))?result:null);
+      await logAction(logMeta.action,logMeta.entityType,entityId,logMeta.summary)
+    }
+    await loadSharedState(false);
+    return result
+  }
+  catch(e){alert(e.message||'Could not save the change.');setSync('Sync problem',false);return null}
 }
 function priorityContext(){
   const now=new Date(),future=A.filter(x=>!x.done&&new Date(x.due)>=now).sort((a,b)=>new Date(a.due)-new Date(b.due)),isExam=x=>/\bexam\b/i.test(x.title),nonExam=future.filter(x=>!isExam(x)),exams=future.filter(isExam);
@@ -75,20 +119,56 @@ function render(){
   $('glist').innerHTML=G.length?G.map(x=>{const q=Math.min(100,Math.round(Number(x.done||0)/Number(x.target||1)*100));return '<div class="item"><div class="between"><h3>'+esc(x.title)+'</h3><b>'+q+'%</b></div><div class="progress"><span style="width:'+q+'%"></span></div><div class="between" style="margin-top:9px"><span class="small">'+fmt(Number(x.done||0))+' / '+fmt(Number(x.target||0))+'</span><span><button onclick="gm(\''+x.id+'\',-30)">−30m</button> <button onclick="gm(\''+x.id+'\',30)">+30m</button> <button class="icon edit" onclick="editG(\''+x.id+'\')">✎</button> <button class="icon danger" onclick="delG(\''+x.id+'\')">⌫</button></span></div></div>'}).join(''):'<span class="small">No shared goals yet.</span>';
   $('rtasks').textContent=doneTasks;$('rassign').textContent=completed.length;$('rbar').style.width=taskPct+'%';$('rtext').textContent=taskPct+'% of your current study tasks are complete.'
 }
-async function toggleA(id){const x=A.find(v=>v.id===id);if(x)await mutate('app_set_assignment_done',{p_id:id,p_done:!x.done})}
-async function delA(id){if(confirm('Delete this assignment for everyone?'))await mutate('app_delete_assignment',{p_id:id})}
-async function editA(id){const x=A.find(v=>v.id===id);if(!x)return;const title=prompt('Assignment title',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const due=prompt('Due date and time',toInput(x.due));if(due===null||!due.trim())return;const note=prompt('Optional note',x.note||'');if(note===null)return;const parsed=new Date(due);if(isNaN(parsed)){alert('Please enter a valid date/time.');return}await mutate('app_update_assignment',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_due:parsed.toISOString(),p_note:note})}
-async function toggleT(id){const x=T.find(v=>v.id===id);if(x)await mutate('app_set_task_done',{p_id:id,p_done:!x.done})}
-async function delT(id){if(confirm('Delete this study task for everyone?'))await mutate('app_delete_task',{p_id:id})}
-async function editT(id){const x=T.find(v=>v.id===id);if(!x)return;const title=prompt('Study task',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const minutes=Number(prompt('Minutes',x.minutes));if(!minutes||minutes<1)return;await mutate('app_update_task',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_minutes:minutes})}
-async function gm(id,n){await mutate('app_adjust_goal',{p_id:id,p_delta_minutes:n})}
-async function delG(id){if(confirm('Delete this goal for everyone?'))await mutate('app_delete_goal',{p_id:id})}
-async function editG(id){const x=G.find(v=>v.id===id);if(!x)return;const title=prompt('Goal name',x.title);if(title===null||!title.trim())return;const hours=Number(prompt('Target hours',Math.max(1,Math.round(Number(x.target||60)/60))));if(!hours||hours<1)return;await mutate('app_update_goal',{p_id:id,p_title:title.trim(),p_target_minutes:hours*60})}
+async function toggleA(id){const x=A.find(v=>v.id===id);if(x)await mutate('app_set_assignment_done',{p_id:id,p_done:!x.done},{action:!x.done?'assignment_completed':'assignment_reopened',entityType:'assignment',entityId:id,summary:x.title})}
+async function delA(id){const x=A.find(v=>v.id===id);if(confirm('Delete this assignment for everyone?'))await mutate('app_delete_assignment',{p_id:id},{action:'assignment_deleted',entityType:'assignment',entityId:id,summary:x?x.title:'Assignment'})}
+async function editA(id){const x=A.find(v=>v.id===id);if(!x)return;const title=prompt('Assignment title',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const due=prompt('Due date and time',toInput(x.due));if(due===null||!due.trim())return;const note=prompt('Optional note',x.note||'');if(note===null)return;const parsed=new Date(due);if(isNaN(parsed)){alert('Please enter a valid date/time.');return}await mutate('app_update_assignment',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_due:parsed.toISOString(),p_note:note},{action:'assignment_updated',entityType:'assignment',entityId:id,summary:title.trim()})}
+async function toggleT(id){const x=T.find(v=>v.id===id);if(x)await mutate('app_set_task_done',{p_id:id,p_done:!x.done},{action:!x.done?'task_completed':'task_reopened',entityType:'task',entityId:id,summary:x.title})}
+async function delT(id){const x=T.find(v=>v.id===id);if(confirm('Delete this study task for everyone?'))await mutate('app_delete_task',{p_id:id},{action:'task_deleted',entityType:'task',entityId:id,summary:x?x.title:'Study task'})}
+async function editT(id){const x=T.find(v=>v.id===id);if(!x)return;const title=prompt('Study task',x.title);if(title===null||!title.trim())return;const course=prompt('Course',x.course);if(course===null||!course.trim())return;const minutes=Number(prompt('Minutes',x.minutes));if(!minutes||minutes<1)return;await mutate('app_update_task',{p_id:id,p_title:title.trim(),p_course:course.trim(),p_minutes:minutes},{action:'task_updated',entityType:'task',entityId:id,summary:title.trim()})}
+async function gm(id,n){const x=G.find(v=>v.id===id);await mutate('app_adjust_goal',{p_id:id,p_delta_minutes:n},{action:'goal_progress_changed',entityType:'goal',entityId:id,summary:(x?x.title:'Goal')+' ('+(n>=0?'+':'')+n+' min)'})}
+async function delG(id){const x=G.find(v=>v.id===id);if(confirm('Delete this goal for everyone?'))await mutate('app_delete_goal',{p_id:id},{action:'goal_deleted',entityType:'goal',entityId:id,summary:x?x.title:'Goal'})}
+async function editG(id){const x=G.find(v=>v.id===id);if(!x)return;const title=prompt('Goal name',x.title);if(title===null||!title.trim())return;const hours=Number(prompt('Target hours',Math.max(1,Math.round(Number(x.target||60)/60))));if(!hours||hours<1)return;await mutate('app_update_goal',{p_id:id,p_title:title.trim(),p_target_minutes:hours*60},{action:'goal_updated',entityType:'goal',entityId:id,summary:title.trim()})}
 function openForm(k){$('dtitle').textContent=k==='assignment'?'Add assignment':k==='task'?'Add study task':'Add goal';$('fa').hidden=k!=='assignment';$('ft').hidden=k!=='task';$('fg').hidden=k!=='goal';$('dlg').showModal()}
-async function saveA(){if(!$('at').value.trim()||!$('ad').value)return;await mutate('app_add_assignment',{p_title:$('at').value.trim(),p_course:$('ac').value,p_due:new Date($('ad').value).toISOString(),p_note:$('anote').value.trim()});$('at').value='';$('ad').value='';$('anote').value='';$('dlg').close()}
-async function saveT(){if(!$('tt').value.trim())return;await mutate('app_add_task',{p_title:$('tt').value.trim(),p_course:$('tc').value,p_minutes:Number($('tm').value)||30});$('tt').value='';$('dlg').close()}
-async function saveG(){if(!$('gt').value.trim())return;await mutate('app_add_goal',{p_title:$('gt').value.trim(),p_target_minutes:(Number($('gh').value)||5)*60});$('gt').value='';$('dlg').close()}
+async function saveA(){if(!$('at').value.trim()||!$('ad').value)return;await mutate('app_add_assignment',{p_title:$('at').value.trim(),p_course:$('ac').value,p_due:new Date($('ad').value).toISOString(),p_note:$('anote').value.trim()},{action:'assignment_added',entityType:'assignment',summary:$('at').value.trim()});$('at').value='';$('ad').value='';$('anote').value='';$('dlg').close()}
+async function saveT(){if(!$('tt').value.trim())return;await mutate('app_add_task',{p_title:$('tt').value.trim(),p_course:$('tc').value,p_minutes:Number($('tm').value)||30},{action:'task_added',entityType:'task',summary:$('tt').value.trim()});$('tt').value='';$('dlg').close()}
+async function saveG(){if(!$('gt').value.trim())return;await mutate('app_add_goal',{p_title:$('gt').value.trim(),p_target_minutes:(Number($('gh').value)||5)*60},{action:'goal_added',entityType:'goal',summary:$('gt').value.trim()});$('gt').value='';$('dlg').close()}
 function changeInvite(){localStorage.removeItem(INVITE_KEY);inviteCode='';joined=false;$('inviteInput').value='';$('inviteGate').hidden=false;$('inviteError').textContent='';setSync('Invite code required',false)}
+function openAdmin(){
+  const dlg=$('adminDlg');
+  const saved=sessionStorage.getItem(ADMIN_SESSION_KEY)||'';
+  $('adminCode').value=saved;
+  $('adminError').textContent='';
+  dlg.showModal();
+  if(saved)loadAdmin()
+}
+async function loadAdmin(){
+  const code=$('adminCode').value.trim().toUpperCase();
+  if(!code){$('adminError').textContent='Enter the admin code.';return}
+  $('adminError').textContent='Loading activity…';
+  try{
+    const data=await rpc('app_admin_dashboard',{p_admin_code:code,p_limit:120});
+    sessionStorage.setItem(ADMIN_SESSION_KEY,code);
+    $('adminError').textContent='';
+    $('adminContent').hidden=false;
+    const s=data.summary||{};
+    $('adminStats').innerHTML=
+      '<div class="stat"><span class="small">Unique devices</span><b>'+Number(s.unique_devices||0)+'</b></div>'+
+      '<div class="stat"><span class="small">Visit sessions</span><b>'+Number(s.total_sessions||0)+'</b></div>'+
+      '<div class="stat"><span class="small">Active now</span><b>'+Number(s.active_devices||0)+'</b></div>'+
+      '<div class="stat"><span class="small">Tracked changes</span><b>'+Number(s.total_actions||0)+'</b></div>';
+    $('adminSessions').innerHTML=(data.sessions||[]).length?(data.sessions||[]).map(v=>
+      '<div class="admin-row"><div><b>'+esc(deviceLabel(v.device_id))+'</b><div class="small">'+esc(browserLabel(v.user_agent))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-right"><b>'+esc(fmtDuration(v.duration_seconds))+'</b><div class="small">Last '+new Date(v.last_seen).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
+    ).join(''):'<div class="small">No visitor sessions have been logged yet.</div>';
+    $('adminActivity').innerHTML=(data.activity||[]).length?(data.activity||[]).map(v=>
+      '<div class="admin-row"><div><b>'+esc(String(v.action_type||'').replaceAll('_',' '))+'</b><div class="small">'+esc(v.summary||v.entity_type||'Activity')+'</div><div class="small">'+esc(deviceLabel(v.device_id))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-right"><div class="small">'+new Date(v.occurred_at).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
+    ).join(''):'<div class="small">No changes have been logged yet.</div>';
+  }catch(e){
+    $('adminContent').hidden=true;
+    $('adminError').textContent=e.message&&/admin code/i.test(e.message)?'Incorrect admin code.':'Could not load admin activity.'
+  }
+}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button').forEach(x=>x.classList.remove('activeTab'));b.classList.add('activeTab');document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));$(b.dataset.v).classList.add('active')});
 $('fab').onclick=()=>openForm($('assignments').classList.contains('active')?'assignment':'task');
 $('inviteButton').onclick=()=>joinWithCode($('inviteInput').value);
@@ -96,4 +176,5 @@ $('inviteInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWithCode(
 loadCached();render();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 (async()=>{if(inviteCode){$('inviteInput').value=inviteCode;const ok=await joinWithCode(inviteCode);if(!ok)$('inviteGate').hidden=false}else{$('inviteGate').hidden=false;setSync('Invite code required',false)}})();
 setInterval(()=>{if(joined&&!document.hidden)loadSharedState(true)},3000);
-document.addEventListener('visibilitychange',()=>{if(!document.hidden&&joined)loadSharedState(false)});
+setInterval(()=>{if(joined&&!document.hidden)logVisit('heartbeat')},30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden&&joined){loadSharedState(false);logVisit('heartbeat')}});
