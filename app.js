@@ -4,19 +4,22 @@ const INVITE_KEY='jk.shared.invite.v1';
 const CACHE_KEY='jk.shared.cache.v1';
 const DEVICE_KEY='jk.shared.device.v1';
 const ADMIN_SESSION_KEY='jk.admin.code.v1';
-const PROFILE_KEY='jk.shared.profile.name.v1';
 const ECO2210='ECO 2210 - Principles of Macroeconomics (SHO1C)';
 const ENG2211='ENG 2211 - Business Communication (GT02C)';
 const MKT2000='MKT 2000 - Marketing Management (EE01C)';
 const BIO='BIO - Biology';
+const SUBJECTS={
+  eco:{course:ECO2210,code:'ECO 2210',name:'Principles of Macroeconomics',icon:'📈',gradient:'linear-gradient(150deg,#0ca56c,#08764d)'},
+  eng:{course:ENG2211,code:'ENG 2211',name:'Business Communication',icon:'📖',gradient:'linear-gradient(150deg,#3d7eff,#1749cf)'},
+  mkt:{course:MKT2000,code:'MKT 2000',name:'Marketing Management',icon:'📣',gradient:'linear-gradient(150deg,#ffad2f,#ef6c00)'},
+  bio:{course:BIO,code:'BIO',name:'Biology',icon:'🔬',gradient:'linear-gradient(150deg,#a85df5,#6d28d9)'}
+};
 const $=id=>document.getElementById(id);
 let inviteCode=localStorage.getItem(INVITE_KEY)||'';
 let deviceId=localStorage.getItem(DEVICE_KEY)||'';
 if(!deviceId){deviceId=crypto.randomUUID();localStorage.setItem(DEVICE_KEY,deviceId)}
 const sessionId=crypto.randomUUID();
-let participantName=localStorage.getItem(PROFILE_KEY)||'';
-let profileResolve=null;
-let A=[],T=[],G=[],joined=false,loading=false;
+let A=[],T=[],G=[],joined=false,loading=false,activeSubjectKey=null,activeSubjectTab='upcoming';
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const fmt=m=>m<60?m+'m':Math.floor(m/60)+'h '+(m%60)+'m';
 const toInput=d=>{const x=new Date(d),p=n=>String(n).padStart(2,'0');return x.getFullYear()+'-'+p(x.getMonth()+1)+'-'+p(x.getDate())+'T'+p(x.getHours())+':'+p(x.getMinutes())};
@@ -66,59 +69,13 @@ function browserLabel(ua){
   const browser=/CriOS|Chrome/i.test(ua)?'Chrome':/Safari/i.test(ua)?'Safari':/Firefox/i.test(ua)?'Firefox':'Browser';
   return device+' • '+browser
 }
-function setMemberStatus(){
-  const el=$('memberStatus');
-  if(el)el.textContent=participantName?'Shared as '+participantName:'';
-}
-async function ensureProfile(){
-  try{
-    if(participantName){
-      participantName=await rpc('app_register_participant',{p_code:inviteCode,p_device_id:deviceId,p_display_name:participantName});
-      localStorage.setItem(PROFILE_KEY,participantName);
-      setMemberStatus();
-      return participantName;
-    }
-    const existing=await rpc('app_get_participant',{p_code:inviteCode,p_device_id:deviceId});
-    if(existing){
-      participantName=existing;
-      localStorage.setItem(PROFILE_KEY,participantName);
-      setMemberStatus();
-      return participantName;
-    }
-  }catch{}
-  $('profileName').value='';
-  $('profileError').textContent='';
-  if(!$('profileDlg').open)$('profileDlg').showModal();
-  return await new Promise(resolve=>{profileResolve=resolve});
-}
-async function saveProfile(){
-  const name=$('profileName').value.trim();
-  if(!name){$('profileError').textContent='Please enter your name.';return}
-  $('profileError').textContent='Saving…';
-  try{
-    participantName=await rpc('app_register_participant',{p_code:inviteCode,p_device_id:deviceId,p_display_name:name});
-    localStorage.setItem(PROFILE_KEY,participantName);
-    setMemberStatus();
-    $('profileError').textContent='';
-    $('profileDlg').close();
-    if(profileResolve){const r=profileResolve;profileResolve=null;r(participantName)}
-  }catch(e){
-    $('profileError').textContent='Could not save your name. Try again.'
-  }
-}
-function changeName(){
-  $('profileName').value=participantName||'';
-  $('profileError').textContent='';
-  if(!$('profileDlg').open)$('profileDlg').showModal();
-}
-
 async function joinWithCode(code){
   const clean=String(code||'').trim().toUpperCase(); if(!clean)return false;
   $('inviteError').textContent='Checking code…';
   try{
     const ok=await verifyInvite(clean);
     if(!ok){$('inviteError').textContent='That invite code is not valid.';return false}
-    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await ensureProfile();await loadSharedState(false);logVisit('start');return true
+    inviteCode=clean;localStorage.setItem(INVITE_KEY,clean);joined=true;$('inviteGate').hidden=true;$('inviteError').textContent='';setSync('Shared • Live');await loadSharedState(false);logVisit('start');return true
   }catch(e){$('inviteError').textContent='Could not connect. Check your internet and try again.';return false}
 }
 async function loadSharedState(silent=true){
@@ -162,6 +119,48 @@ function taskRow(x){
   return '<div class="item row"><button class="check '+(x.done?'on':'')+'" onclick="toggleT(\''+x.id+'\')">'+(x.done?'✓':'')+'</button><div style="flex:1"><h3 style="'+(x.done?'text-decoration:line-through;opacity:.55':'')+'">'+esc(x.title)+'</h3><div class="small">'+esc(x.course)+' • '+x.minutes+' min • '+esc(whenText)+'</div></div><button class="icon edit" onclick="editT(\''+x.id+'\')">✎</button><button class="icon danger" onclick="delT(\''+x.id+'\')">⌫</button></div>'
 }
 
+
+function openSubject(key){
+  if(!SUBJECTS[key])return;
+  activeSubjectKey=key;
+  activeSubjectTab='upcoming';
+  $('subjectHome').hidden=true;
+  $('subjectDetail').hidden=false;
+  renderSubjectDetail();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function closeSubject(){
+  activeSubjectKey=null;
+  $('subjectDetail').hidden=true;
+  $('subjectHome').hidden=false;
+}
+function setSubjectTab(tab){
+  if(!['upcoming','completed','past'].includes(tab))return;
+  activeSubjectTab=tab;
+  renderSubjectDetail();
+}
+function renderSubjectDetail(){
+  if(!activeSubjectKey||!SUBJECTS[activeSubjectKey])return;
+  const s=SUBJECTS[activeSubjectKey],now=new Date(),ctx=priorityContext();
+  const upcoming=A.filter(x=>x.course===s.course&&!x.done&&new Date(x.due)>=now)
+    .sort((a,b)=>priorityInfo(a,ctx).rank-priorityInfo(b,ctx).rank||new Date(a.due)-new Date(b.due));
+  const completed=A.filter(x=>x.course===s.course&&x.done)
+    .sort((a,b)=>new Date(b.due)-new Date(a.due));
+  const past=A.filter(x=>x.course===s.course&&!x.done&&new Date(x.due)<now)
+    .sort((a,b)=>new Date(b.due)-new Date(a.due));
+  $('subjectDetailHero').style.background=s.gradient;
+  $('subjectDetailArt').textContent=s.icon;
+  $('subjectDetailCode').textContent=s.code;
+  $('subjectDetailName').textContent=s.name;
+  $('subjectUpcomingCount').textContent=upcoming.length;
+  $('subjectCompletedCount').textContent=completed.length;
+  $('subjectPastCount').textContent=past.length;
+  document.querySelectorAll('.detail-tab').forEach(b=>b.classList.toggle('active',b.dataset.subtab===activeSubjectTab));
+  const list=activeSubjectTab==='completed'?completed:activeSubjectTab==='past'?past:upcoming;
+  const mode=activeSubjectTab==='completed'?'completed':activeSubjectTab==='past'?'past':'upcoming';
+  const empty=activeSubjectTab==='completed'?'No completed assignments yet.':activeSubjectTab==='past'?'No past-due assignments.':'No upcoming assignments.';
+  $('subjectDetailList').innerHTML=list.length?list.map(x=>assignmentRow(x,mode,ctx)).join(''):'<div class="empty-state">'+empty+'</div>';
+}
 function render(){
   const now=new Date();
   $('date').textContent=now.toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
@@ -186,23 +185,15 @@ function render(){
   future.sort((a,b)=>priorityInfo(a,ctx).rank-priorityInfo(b,ctx).rank||new Date(a.due)-new Date(b.due));
 
   $('acount').textContent=future.length+' upcoming';
-  $('upcomingList').innerHTML=future.length
-    ?future.map(x=>assignmentRow(x,'upcoming',ctx)).join('')
-    :'<span class="small">No upcoming assignments.</span>';
-  $('completedSummary').textContent='Completed ('+completed.length+')';
-  $('completedList').innerHTML=completed.length
-    ?completed.map(x=>assignmentRow(x,'completed',ctx)).join('')
-    :'<span class="small">No completed assignments yet.</span>';
-  $('pastSummary').textContent='Past Assignments ('+past.length+')';
-  $('pastList').innerHTML=past.length
-    ?past.map(x=>assignmentRow(x,'past',ctx)).join('')
-    :'<span class="small">No past-due assignments.</span>';
-
-  const sets={future,past,completed};
-  renderSubject('ecoSubjectAssignments',ECO2210,'ECO',sets,ctx);
-  renderSubject('engSubjectAssignments',ENG2211,'ENG',sets,ctx);
-  renderSubject('mktSubjectAssignments',MKT2000,'MKT',sets,ctx);
-  renderSubject('bioSubjectAssignments',BIO,'BIO',sets,ctx);
+  Object.entries(SUBJECTS).forEach(([key,s])=>{
+    const all=A.filter(x=>x.course===s.course);
+    const upcoming=all.filter(x=>!x.done&&new Date(x.due)>=now).length;
+    const completedCount=all.filter(x=>x.done).length;
+    const pastCount=all.filter(x=>!x.done&&new Date(x.due)<now).length;
+    const el=$(key+'Counts');
+    if(el)el.textContent=upcoming+' upcoming • '+completedCount+' completed'+(pastCount?' • '+pastCount+' past':'');
+  });
+  if(activeSubjectKey)renderSubjectDetail();
 
   const courseDefs=[
     {course:ECO2210,name:'ECO 2210',detail:'Principles of Macroeconomics'},
@@ -328,11 +319,11 @@ async function loadAdmin(){
       '<div class="stat"><span class="small">Active now</span><b>'+Number(s.active_devices||0)+'</b></div>'+
       '<div class="stat"><span class="small">Tracked changes</span><b>'+Number(s.total_actions||0)+'</b></div>';
     $('adminSessions').innerHTML=(data.sessions||[]).length?(data.sessions||[]).map(v=>
-      '<div class="admin-row"><div><b>'+esc(v.display_name||deviceLabel(v.device_id))+'</b><div class="small">'+esc(browserLabel(v.user_agent))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-row"><div><b>'+esc(deviceLabel(v.device_id))+'</b><div class="small">'+esc(browserLabel(v.user_agent))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
       '<div class="admin-right"><b>'+esc(fmtDuration(v.duration_seconds))+'</b><div class="small">Last '+new Date(v.last_seen).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
     ).join(''):'<div class="small">No visitor sessions have been logged yet.</div>';
     $('adminActivity').innerHTML=(data.activity||[]).length?(data.activity||[]).map(v=>
-      '<div class="admin-row"><div><b>'+esc(String(v.action_type||'').replaceAll('_',' '))+'</b><div class="small">'+esc(v.summary||v.entity_type||'Activity')+'</div><div class="small">'+esc(v.display_name||deviceLabel(v.device_id))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
+      '<div class="admin-row"><div><b>'+esc(String(v.action_type||'').replaceAll('_',' '))+'</b><div class="small">'+esc(v.summary||v.entity_type||'Activity')+'</div><div class="small">'+esc(deviceLabel(v.device_id))+' • '+esc(v.masked_ip||'IP unavailable')+'</div></div>'+
       '<div class="admin-right"><div class="small">'+new Date(v.occurred_at).toLocaleString([],{dateStyle:'short',timeStyle:'short'})+'</div></div></div>'
     ).join(''):'<div class="small">No changes have been logged yet.</div>';
   }catch(e){
@@ -345,6 +336,7 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
   b.classList.add('activeTab');
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   $(b.dataset.v).classList.add('active');
+  if(b.dataset.v!=='assignments'&&activeSubjectKey)closeSubject();
   $('fab').hidden=b.dataset.v==='reports';
 });
 $('fab').onclick=()=>{
@@ -354,7 +346,7 @@ $('fab').onclick=()=>{
 };
 $('inviteButton').onclick=()=>joinWithCode($('inviteInput').value);
 $('inviteInput').addEventListener('keydown',e=>{if(e.key==='Enter')joinWithCode($('inviteInput').value)});
-loadCached();render();setMemberStatus();if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
+loadCached();render();localStorage.removeItem('jk.shared.profile.name.v1');if('serviceWorker'in navigator)navigator.serviceWorker.register('./sw.js');
 (async()=>{if(inviteCode){$('inviteInput').value=inviteCode;const ok=await joinWithCode(inviteCode);if(!ok)$('inviteGate').hidden=false}else{$('inviteGate').hidden=false;setSync('Invite code required',false)}})();
 setInterval(()=>{if(joined&&!document.hidden)loadSharedState(true)},3000);
 setInterval(()=>{if(joined&&!document.hidden)logVisit('heartbeat')},30000);
