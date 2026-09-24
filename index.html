@@ -111,7 +111,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 </style></head><body>
 <div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
-<div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div><div class="sync-line"><span class="sync-dot"></span><span class="small" id="syncStatus">Connecting shared workspace…</span></div></div></div>
+<div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div><div class="sync-line"><span class="sync-dot"></span><span class="small" id="syncStatus">Connecting shared workspace…</span></div><div class="small" id="memberStatus"></div></div></div>
 
 <section id="today" class="view active">
   <div class="between"><h2>Today</h2><span class="pill" id="todayCount">0 to do</span></div>
@@ -176,6 +176,8 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
   </div>
   <div class="between"><h2>Study goals</h2><button class="icon edit" onclick="openForm('goal')" aria-label="Add goal">＋</button></div>
   <div class="card" id="glist"></div>
+  <h2>Upcoming study plan</h2>
+  <div class="card" id="upcomingTasks"></div>
 </section>
 
 <section id="reports" class="view">
@@ -199,7 +201,7 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     <h3>Results by subject</h3>
     <div id="reportSubjects"></div>
   </div>
-  <div class="card"><h3>Shared workspace</h3><p class="small">Assignments, tasks, goals and completion status are shared across devices. Changes usually appear on other devices within a few seconds.</p><button class="secondary" onclick="changeInvite()">Change invite code</button></div>
+  <div class="card"><h3>Shared workspace</h3><p class="small">Assignments, tasks, goals and completion status are shared across devices. Changes usually appear on other devices within a few seconds.</p><button class="secondary" onclick="changeName()">Change your name</button><button class="secondary" onclick="changeInvite()">Change invite code</button></div>
   <div class="card"><h3>Admin activity</h3><p class="small">View visitor counts, session time, recent changes, devices, and masked IP addresses.</p><button class="primary" onclick="openAdmin()">Open admin activity</button></div>
 </section>
 </main>
@@ -207,9 +209,16 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 <nav><button class="activeTab" data-v="today">⌂<span>Today</span></button><button data-v="assignments">✓<span>Assignments</span></button><button data-v="goals">◎<span>Goals</span></button><button data-v="reports">▥<span>Reports</span></button></nav>
 <dialog id="dlg"><h2 id="dtitle"></h2>
 <div id="fa"><input id="at" placeholder="Assignment title"><select id="ac"><option>ECO 2210 - Principles of Macroeconomics (SHO1C)</option><option>ENG 2211 - Business Communication (GT02C)</option><option>MKT 2000 - Marketing Management (EE01C)</option><option>BIO - Biology</option><option>Other</option></select><input id="ad" type="datetime-local"><input id="anote" placeholder="Optional note"><button class="primary" onclick="saveA()">Save assignment</button></div>
-<div id="ft" hidden><input id="tt" placeholder="Study task"><select id="tc"><option>ECO 2210 - Principles of Macroeconomics (SHO1C)</option><option>ENG 2211 - Business Communication (GT02C)</option><option>MKT 2000 - Marketing Management (EE01C)</option><option>BIO - Biology</option><option>Other</option></select><input id="tm" type="number" min="5" max="240" step="5" value="30"><button class="primary" onclick="saveT()">Save study task</button></div>
+<div id="ft" hidden><input id="tt" placeholder="Study task"><select id="tc"><option>ECO 2210 - Principles of Macroeconomics (SHO1C)</option><option>ENG 2211 - Business Communication (GT02C)</option><option>MKT 2000 - Marketing Management (EE01C)</option><option>BIO - Biology</option><option>Other</option></select><input id="tm" type="number" min="5" max="240" step="5" value="30"><input id="ts" type="datetime-local"><button class="primary" onclick="saveT()">Save study task</button></div>
 <div id="fg" hidden><input id="gt" placeholder="Goal name"><input id="gh" type="number" min="1" max="80" value="5"><button class="primary" onclick="saveG()">Save goal</button></div>
 <button class="secondary" onclick="dlg.close()">Cancel</button></dialog>
+<dialog id="profileDlg">
+  <h2>Your name</h2>
+  <p class="small">Enter the name you want other shared-workspace activity to show. This helps identify who made each update.</p>
+  <input id="profileName" maxlength="60" autocomplete="name" placeholder="Your name">
+  <button class="primary" onclick="saveProfile()">Continue</button>
+  <div id="profileError" class="invite-error"></div>
+</dialog>
 <dialog id="adminDlg" class="admin-dialog">
   <h2>Admin Activity</h2>
   <p class="small">Private analytics for J.K Study Management.</p>
