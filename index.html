@@ -92,45 +92,67 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
 .admin-section h3{margin-bottom:8px}
 .admin-note{font-size:12px;color:var(--muted);margin-top:8px}
 
+
+.focus-card{border-left:4px solid var(--accent)}
+.empty-state{padding:18px;text-align:center;color:var(--muted);font-size:14px}
+.attention-card{padding:14px;border:1px solid var(--line);border-radius:16px;margin-bottom:10px;background:#fff}
+.attention-card:last-child{margin-bottom:0}
+.attention-top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.attention-pill{display:inline-flex;padding:5px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+.attention-critical{background:#ffe7e7;color:#b42318}
+.attention-high{background:#fff3db;color:#9a6700}
+.attention-watch{background:#eef0ff;color:#4b57da}
+.attention-good{background:#e7f7f0;color:#117a55}
+.report-course{padding:14px 0;border-bottom:1px solid var(--line)}
+.report-course:last-child{border-bottom:0}
+.report-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:7px;color:var(--muted);font-size:12px}
+.section-note{font-size:13px;color:var(--muted);margin:-4px 0 12px}
+
 </style></head><body>
 <div class="app"><header><div class="small" id="date"></div><img class="brand-logo" src="logo.png" alt="J.K Study Management logo"><div class="small">Plan • Study • Grow • Succeed</div></header>
 <main>
 <div class="card logo-card"><img src="logo.png" alt="logo"><div><h3>J.K Study Management</h3><div class="tagline">Organize assignments, study goals, and progress in one place.</div><div class="sync-line"><span class="sync-dot"></span><span class="small" id="syncStatus">Connecting shared workspace…</span></div></div></div>
-<div class="card memory-hero">
-  <img src="photo_couple.jpg" alt="Personal study motivation photo">
-  <div class="overlay"><div class="copy"><div class="kicker">Study Motivation</div><h2>Plan. Study. Grow.</h2><p>Keep your goals, deadlines, and the people who motivate you close.</p></div></div>
-</div>
-<section class="card" id="subjectsCard">
-  <div class="between"><h2 style="margin:0">My Subjects</h2><span class="pill">4 courses</span></div>
-  <div class="item">
-    <h3>ECO 2210 - Principles of Macroeconomics</h3>
-    <div class="small">Section SHO1C</div>
-    <div id="ecoSubjectAssignments"></div>
-  </div>
-  <div class="item">
-    <h3>ENG 2211 - Business Communication</h3>
-    <div class="small">Section GT02C</div>
-    <div id="engSubjectAssignments"></div>
-  </div>
-  <div class="item">
-    <h3>MKT 2000 - Marketing Management</h3>
-    <div class="small">Section EE01C</div>
-    <div id="mktSubjectAssignments"></div>
-  </div>
-  <div class="item"><h3>BIO - Biology</h3><div class="small">Biology course</div><div id="bioSubjectAssignments"></div></div>
-</section>
+
 <section id="today" class="view active">
-<div class="card"><div class="between"><div><div class="pill">TODAY</div><h2 id="ptext"></h2></div><b id="ppct"></b></div><div class="progress"><span id="pbar"></span></div></div>
-<div class="stats"><div class="stat"><span class="small">Study time</span><b id="stime"></b><span class="small">Completed tasks</span></div><div class="stat"><span class="small">Due soon</span><b id="dsoon"></b><span class="small">Next 7 days</span></div></div>
-<div class="photo-grid">
-  <div class="card photo-card"><img src="photo_woman.jpg" alt="Personal portrait"><div class="text"><h3>Keep going</h3><div class="small">One assignment at a time.</div></div></div>
-  <div class="card photo-card"><img src="photo_man.jpg" alt="Personal portrait"><div class="text"><h3>Stay focused</h3><div class="small">Small progress adds up.</div></div></div>
-</div>
-<h2>Study tasks</h2><div class="card" id="tasks"></div></section>
+  <div class="between"><h2>Today</h2><span class="pill" id="todayCount">0 to do</span></div>
+  <div class="card focus-card">
+    <h3>Assignments due today</h3>
+    <div id="todayAssignments"></div>
+  </div>
+  <div class="card">
+    <h3>Today's study tasks</h3>
+    <div class="small" style="margin:4px 0 8px">Incomplete study tasks are your current daily checklist.</div>
+    <div id="tasks"></div>
+  </div>
+</section>
+
 <section id="assignments" class="view">
   <div class="between"><h2>Assignments</h2><span class="pill" id="acount"></span></div>
+  <section class="card" id="subjectsCard">
+    <div class="between"><h3 style="margin:0">All 4 Subjects</h3><span class="pill">Shared</span></div>
+    <div class="item">
+      <h3>ECO 2210 - Principles of Macroeconomics</h3>
+      <div class="small">Section SHO1C</div>
+      <div id="ecoSubjectAssignments"></div>
+    </div>
+    <div class="item">
+      <h3>ENG 2211 - Business Communication</h3>
+      <div class="small">Section GT02C</div>
+      <div id="engSubjectAssignments"></div>
+    </div>
+    <div class="item">
+      <h3>MKT 2000 - Marketing Management</h3>
+      <div class="small">Section EE01C</div>
+      <div id="mktSubjectAssignments"></div>
+    </div>
+    <div class="item">
+      <h3>BIO - Biology</h3>
+      <div class="small">Biology course</div>
+      <div id="bioSubjectAssignments"></div>
+    </div>
+  </section>
   <div class="card">
-    <div class="assignment-section-title">Upcoming — sorted by priority</div>
+    <div class="assignment-section-title">All upcoming assignments — sorted by priority</div>
     <div id="upcomingList"></div>
     <details class="folder" id="completedFolder">
       <summary id="completedSummary">Completed</summary>
@@ -142,8 +164,44 @@ input,select{width:100%;padding:12px;border:1px solid var(--line);border-radius:
     </details>
   </div>
 </section>
-<section id="goals" class="view"><h2>Goals</h2><div class="card wide-banner"><img src="photo_heart.jpg" alt="Hands forming a heart at the beach"></div><div class="card quote-card"><h3>Your reason to keep going</h3><p class="small">Use your goals and favorite memories as motivation to stay consistent throughout the semester.</p></div><div class="card" id="glist"></div><button class="primary" onclick="openForm('goal')">Add goal</button></section>
-<section id="reports" class="view"><h2>Progress report</h2><div class="stats"><div class="stat"><span class="small">Tasks done</span><b id="rtasks"></b></div><div class="stat"><span class="small">Assignments done</span><b id="rassign"></b></div></div><div class="card"><h3>Overall task progress</h3><div class="progress" style="margin-top:12px"><span id="rbar"></span></div><p class="small" id="rtext"></p></div><div class="card"><h3>Shared workspace</h3><p class="small">Assignments, tasks, goals and completion status are shared across devices. Changes usually appear on other devices within a few seconds.</p><button class="secondary" onclick="changeInvite()">Change invite code</button></div><div class="card"><h3>Admin activity</h3><p class="small">View visitor counts, session time, recent changes, devices, and masked IP addresses.</p><button class="primary" onclick="openAdmin()">Open admin activity</button></div></section>
+
+<section id="goals" class="view">
+  <h2>Subjects needing attention</h2>
+  <div class="section-note">Calculated from overdue work and assignments coming due soon.</div>
+  <div class="card" id="attentionList"></div>
+  <div class="card wide-banner"><img src="photo_heart.jpg" alt="Hands forming a heart at the beach"></div>
+  <div class="photo-grid">
+    <div class="card photo-card"><img src="photo_woman.jpg" alt="Personal portrait"><div class="text"><h3>Keep going</h3><div class="small">Focus on the subject at the top first.</div></div></div>
+    <div class="card photo-card"><img src="photo_man.jpg" alt="Personal portrait"><div class="text"><h3>Stay consistent</h3><div class="small">Small daily progress adds up.</div></div></div>
+  </div>
+  <div class="between"><h2>Study goals</h2><button class="icon edit" onclick="openForm('goal')" aria-label="Add goal">＋</button></div>
+  <div class="card" id="glist"></div>
+</section>
+
+<section id="reports" class="view">
+  <h2>Results</h2>
+  <div class="card memory-hero">
+    <img src="photo_couple.jpg" alt="Personal study motivation photo">
+    <div class="overlay"><div class="copy"><div class="kicker">Progress Report</div><h2>See how you're doing</h2><p>Completion, overdue work, and subject-by-subject results.</p></div></div>
+  </div>
+  <div class="stats">
+    <div class="stat"><span class="small">Study tasks</span><b id="rtasks">0 / 0</b><span class="small">completed</span></div>
+    <div class="stat"><span class="small">Assignments</span><b id="rassign">0 / 0</b><span class="small">completed</span></div>
+    <div class="stat"><span class="small">Completion</span><b id="rcompletion">0%</b><span class="small">all assignments</span></div>
+    <div class="stat"><span class="small">Overdue</span><b id="roverdue">0</b><span class="small">needs attention</span></div>
+  </div>
+  <div class="card">
+    <h3>Overall assignment progress</h3>
+    <div class="progress" style="margin-top:12px"><span id="rbar"></span></div>
+    <p class="small" id="rtext"></p>
+  </div>
+  <div class="card">
+    <h3>Results by subject</h3>
+    <div id="reportSubjects"></div>
+  </div>
+  <div class="card"><h3>Shared workspace</h3><p class="small">Assignments, tasks, goals and completion status are shared across devices. Changes usually appear on other devices within a few seconds.</p><button class="secondary" onclick="changeInvite()">Change invite code</button></div>
+  <div class="card"><h3>Admin activity</h3><p class="small">View visitor counts, session time, recent changes, devices, and masked IP addresses.</p><button class="primary" onclick="openAdmin()">Open admin activity</button></div>
+</section>
 </main>
 <button class="fab" id="fab">+</button>
 <nav><button class="activeTab" data-v="today">⌂<span>Today</span></button><button data-v="assignments">✓<span>Assignments</span></button><button data-v="goals">◎<span>Goals</span></button><button data-v="reports">▥<span>Reports</span></button></nav>
