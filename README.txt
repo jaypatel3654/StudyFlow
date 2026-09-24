@@ -1,9 +1,1 @@
-J.K Study Management PWA
-
-This updated package applies your chosen logo to the app:
-- logo shown in the header
-- logo shown in the app branding card
-- home-screen/app icon updated
-- manifest and service worker included
-
-Open the website in Safari on iPhone and use Add to Home Screen.
+Updated J.K Study Management package with your personal photos added for a more attractive design. Upload these files to your repository to update the live app.
