@@ -13,7 +13,7 @@ targets:
     sources:
       - path: .
         excludes:
-          - Widgets
+          - Widgets/**
           - README.md
           - project.yml
           - JKStudyWatch.entitlements
@@ -36,13 +36,13 @@ targets:
     sources:
       - path: Widgets
         excludes:
-          - Info.plist
+          - WidgetExtensionInfo.plist
           - JKStudyWidgets.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jkstudymanagement.watch.widgets
         PRODUCT_NAME: J.K Study Widgets
-        INFOPLIST_FILE: Widgets/Info.plist
+        INFOPLIST_FILE: Widgets/WidgetExtensionInfo.plist
         CODE_SIGN_STYLE: Automatic
         CODE_SIGN_ENTITLEMENTS: Widgets/JKStudyWidgets.entitlements
         SKIP_INSTALL: YES
