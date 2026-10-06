@@ -1,0 +1,35 @@
+name: Validate Apple Watch App
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'watchOS/**'
+      - '.github/workflows/watchos-build.yml'
+
+jobs:
+  build-watchos:
+    runs-on: macos-15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate Xcode project
+        working-directory: watchOS
+        run: xcodegen generate
+
+      - name: Build for Apple Watch Simulator
+        working-directory: watchOS
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project JKStudyWatch.xcodeproj \
+            -scheme JKStudyWatch \
+            -configuration Debug \
+            -sdk watchsimulator \
+            -destination 'generic/platform=watchOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
