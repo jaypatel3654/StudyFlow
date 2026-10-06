@@ -5,6 +5,7 @@ settings:
   base:
     SWIFT_VERSION: 5.0
     WATCHOS_DEPLOYMENT_TARGET: 10.0
+
 targets:
   JKStudyWatch:
     type: application
@@ -12,8 +13,13 @@ targets:
     sources:
       - path: .
         excludes:
+          - Widgets
           - README.md
           - project.yml
+          - JKStudyWatch.entitlements
+    dependencies:
+      - target: JKStudyWidgets
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.jkstudymanagement.watch
@@ -22,3 +28,22 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: J.K Study
         INFOPLIST_KEY_WKApplication: YES
         CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: JKStudyWatch.entitlements
+
+  JKStudyWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: Widgets
+        excludes:
+          - Info.plist
+          - JKStudyWidgets.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jkstudymanagement.watch.widgets
+        PRODUCT_NAME: J.K Study Widgets
+        INFOPLIST_FILE: Widgets/Info.plist
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_ENTITLEMENTS: Widgets/JKStudyWidgets.entitlements
+        SKIP_INSTALL: YES
+        APPLICATION_EXTENSION_API_ONLY: YES
