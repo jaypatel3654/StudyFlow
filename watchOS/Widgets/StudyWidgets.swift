@@ -36,7 +36,7 @@ private struct WidgetTask: Decodable {
     var scheduledDate: Date? { scheduled_at.flatMap(WidgetDates.parse) }
 }
 
-private struct WidgetSnapshot: Codable {
+struct WidgetSnapshot: Codable {
     let updatedAt: TimeInterval
     let todayCount: Int
     let nextTitle: String
