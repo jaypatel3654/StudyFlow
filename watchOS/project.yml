@@ -1,0 +1,24 @@
+name: JKStudyWatch
+options:
+  bundleIdPrefix: com.jkstudymanagement
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    WATCHOS_DEPLOYMENT_TARGET: 10.0
+targets:
+  JKStudyWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: .
+        excludes:
+          - README.md
+          - project.yml
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jkstudymanagement.watch
+        PRODUCT_NAME: J.K Study
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: J.K Study
+        INFOPLIST_KEY_WKApplication: YES
+        CODE_SIGN_STYLE: Automatic
