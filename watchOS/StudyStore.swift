@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 @MainActor
 final class StudyStore: ObservableObject {
@@ -10,9 +11,17 @@ final class StudyStore: ObservableObject {
 
     private let baseURL = "https://cfiwsgqcoeddqqukgxho.supabase.co/rest/v1/rpc/"
     private let apiKey = "sb_publishable_xExXRjTfzng1z4sa_bsGFg_EQ-ai6RO"
+    private let appGroup = "group.com.jkstudymanagement.shared"
+
+    private var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: appGroup)
+    }
 
     var savedInviteCode: String {
-        UserDefaults.standard.string(forKey: "jk.watch.invite") ?? ""
+        if let shared = sharedDefaults?.string(forKey: "jk.watch.invite"), !shared.isEmpty {
+            return shared
+        }
+        return UserDefaults.standard.string(forKey: "jk.watch.invite") ?? ""
     }
 
     func connect(code: String) async -> Bool {
@@ -20,7 +29,7 @@ final class StudyStore: ObservableObject {
         guard !clean.isEmpty else { return false }
         do {
             try await loadState(code: clean)
-            UserDefaults.standard.set(clean, forKey: "jk.watch.invite")
+            saveInviteCode(clean)
             connected = true
             errorMessage = nil
             return true
@@ -49,9 +58,16 @@ final class StudyStore: ObservableObject {
 
     func disconnect() {
         UserDefaults.standard.removeObject(forKey: "jk.watch.invite")
+        sharedDefaults?.removeObject(forKey: "jk.watch.invite")
         assignments = []
         tasks = []
         connected = false
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func saveInviteCode(_ code: String) {
+        UserDefaults.standard.set(code, forKey: "jk.watch.invite")
+        sharedDefaults?.set(code, forKey: "jk.watch.invite")
     }
 
     private func loadState(code: String) async throws {
@@ -60,6 +76,34 @@ final class StudyStore: ObservableObject {
         let state: WatchState = try await rpc("app_get_state", body: ["p_code": code])
         assignments = state.assignments
         tasks = state.tasks
+        saveWidgetSnapshot()
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    private func saveWidgetSnapshot() {
+        let pending = assignments
+            .filter { !$0.done && ($0.dueDate ?? .distantPast) >= Date() }
+            .sorted { ($0.dueDate ?? .distantFuture) < ($1.dueDate ?? .distantFuture) }
+
+        let next = pending.first
+        let exam = pending.first(where: \.isExam)
+        let todayCount = todaysAssignments.count + todaysTasks.count
+
+        let payload: [String: Any] = [
+            "updatedAt": Date().timeIntervalSince1970,
+            "todayCount": todayCount,
+            "nextTitle": next?.title ?? "",
+            "nextCourse": next.map { shortCourse($0.course) } ?? "",
+            "nextDue": next?.due ?? "",
+            "nextID": next?.id ?? "",
+            "examTitle": exam?.title ?? "",
+            "examCourse": exam.map { shortCourse($0.course) } ?? "",
+            "examDue": exam?.due ?? ""
+        ]
+
+        if let data = try? JSONSerialization.data(withJSONObject: payload) {
+            sharedDefaults?.set(data, forKey: "jk.watch.widget.snapshot")
+        }
     }
 
     func setAssignmentDone(_ item: WatchAssignment, done: Bool) async {
