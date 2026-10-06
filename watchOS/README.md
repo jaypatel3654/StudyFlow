@@ -1,6 +1,6 @@
-# J.K Study Management — Apple Watch prototype
+# J.K Study Management — Apple Watch
 
-This folder contains the native SwiftUI watchOS prototype for Phase 2 Apple Watch support.
+This folder contains the native SwiftUI watchOS app plus WidgetKit complications / Smart Stack widgets for J.K Study Management.
 
 ## Included now
 
@@ -13,38 +13,57 @@ This folder contains the native SwiftUI watchOS prototype for Phase 2 Apple Watc
 - 25 / 45 / 60 minute focus timer
 - Manual refresh
 - Shared Supabase workspace connection using the same invite code as the PWA
+- WidgetKit **Next Deadline** complication
+- WidgetKit **Exam Countdown** complication
+- Smart Stack support through accessory widgets
+- One-tap **mark assignment complete** action from the rectangular widget
+- Shared App Group data between the Watch app and widget extension
+- Cloud simulator build validation through GitHub Actions
 
 The Watch app reads and updates the same `assignments` and `study_tasks` data already used by J.K Study Management.
 
 ## First launch
 
-The Watch app asks for the shared workspace invite code once and stores it locally on the Watch. After a successful connection it opens directly to the dashboard on future launches.
+The Watch app asks for the shared workspace invite code once and stores it locally on the Watch. After a successful connection it opens directly to the dashboard on future launches. The app also writes the invite code and a compact dashboard snapshot into the shared App Group so the complications can refresh independently.
 
-## Build
+## Complications and Smart Stack
 
-A native watchOS app must be compiled and signed with Xcode. Because the current main app is a PWA, GitHub Pages cannot deploy a native watchOS binary.
+Two WidgetKit widgets are included:
 
-On a Mac or cloud Mac with Xcode:
+1. **Next Deadline** — shows the nearest assignment, today's workload, and supports an interactive completion button where the widget family allows it.
+2. **Exam Countdown** — shows the closest upcoming exam and the number of days remaining.
 
-1. Install XcodeGen if desired.
-2. In this `watchOS` directory run `xcodegen generate`.
-3. Open `JKStudyWatch.xcodeproj` in Xcode.
-4. Select your Apple Developer Team under Signing & Capabilities.
-5. Add an AppIcon asset for production/App Store builds.
-6. Run on an Apple Watch simulator or a paired Apple Watch.
+Supported accessory families include inline, circular, rectangular, and corner layouts. These families can appear as Apple Watch complications and in the Smart Stack where supported by watchOS.
 
-You can also create a new watchOS App project manually in Xcode and add the Swift files in this folder.
+## Build validation without owning a Mac
+
+The repository includes `.github/workflows/watchos-build.yml`. It runs on a GitHub-hosted macOS machine, installs XcodeGen, generates the Xcode project, and performs an unsigned Apple Watch Simulator build. This catches Swift/Xcode build problems without requiring a local Mac.
+
+## Installing on a real Apple Watch
+
+A real watchOS app still has to be signed by Apple before it can be installed on a physical Watch. GitHub Pages cannot install a native watchOS binary.
+
+For device testing or distribution, the remaining account-level steps are:
+
+1. Have an Apple Developer account/team.
+2. Register the App Group `group.com.jkstudymanagement.shared` in the Apple Developer portal.
+3. Enable that App Group for both bundle IDs:
+   - `com.jkstudymanagement.watch`
+   - `com.jkstudymanagement.watch.widgets`
+4. Create/refresh signing profiles and certificates.
+5. Build/sign with Xcode on a Mac or with a cloud-Mac/CI signing setup.
+6. Install through Xcode/TestFlight or distribute through the App Store.
+
+No Apple private key, signing certificate, or service-role database key is committed to this repository.
 
 ## Architecture
 
-The prototype is independent of the PWA. It calls the existing Supabase security-definer RPCs using the project publishable key plus the user's workspace invite code. No service-role key is included in the Watch app.
+The native Watch app and WidgetKit extension call the existing Supabase security-definer RPCs using the project's publishable key plus the user's workspace invite code. Sensitive Supabase service-role credentials are not included in the Watch source.
 
-## Next production steps
+## Remaining release polish
 
-- Add native AppIcon assets and branding.
-- Add Keychain storage for the workspace code instead of UserDefaults.
-- Add a pairing flow so users do not need to type the invite code on the Watch.
-- Add complications / Smart Stack widgets for next deadline.
-- Add native watchOS notification actions.
-- Add background refresh where appropriate.
-- Add App Store signing, privacy metadata, and release configuration.
+- Native production AppIcon asset catalog and final Watch branding
+- Optional iPhone-to-Watch pairing flow so users do not have to type the invite code on the Watch
+- Native watchOS notification actions
+- Additional background refresh tuning after real-device testing
+- App Store privacy metadata, screenshots, TestFlight, and release configuration
