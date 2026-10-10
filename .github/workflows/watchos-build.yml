@@ -17,11 +17,11 @@ jobs:
       - name: Install XcodeGen
         run: brew install xcodegen
 
-      - name: Generate Xcode project
+      - name: Generate full Xcode project
         working-directory: watchOS
         run: xcodegen generate
 
-      - name: Build for Apple Watch Simulator
+      - name: Build full Apple Watch app for Simulator
         working-directory: watchOS
         run: |
           set -o pipefail
@@ -32,12 +32,31 @@ jobs:
             -sdk watchsimulator \
             -destination 'generic/platform=watchOS Simulator' \
             CODE_SIGNING_ALLOWED=NO \
-            build 2>&1 | tee build.log
+            build 2>&1 | tee build-full.log
 
-      - name: Upload build log
+      - name: Generate personal-test Xcode project
+        working-directory: watchOS
+        run: xcodegen generate --spec project-personal.yml
+
+      - name: Build personal Apple Watch test for Simulator
+        working-directory: watchOS
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project JKStudyWatchPersonal.xcodeproj \
+            -scheme JKStudyWatchPersonal \
+            -configuration Debug \
+            -sdk watchsimulator \
+            -destination 'generic/platform=watchOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build 2>&1 | tee build-personal.log
+
+      - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: watchos-build-log
-          path: watchOS/build.log
+          name: watchos-build-logs
+          path: |
+            watchOS/build-full.log
+            watchOS/build-personal.log
           if-no-files-found: ignore
