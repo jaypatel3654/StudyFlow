@@ -1,0 +1,29 @@
+name: JKStudyWatchPersonal
+options:
+  bundleIdPrefix: com.jkstudymanagement
+settings:
+  base:
+    SWIFT_VERSION: 5.0
+    WATCHOS_DEPLOYMENT_TARGET: 10.0
+
+targets:
+  JKStudyWatchPersonal:
+    type: application
+    platform: watchOS
+    sources:
+      - path: .
+        excludes:
+          - Widgets/**
+          - README.md
+          - PERSONAL_TEST.md
+          - project.yml
+          - project-personal.yml
+          - JKStudyWatch.entitlements
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.jkstudymanagement.watch.personaltest
+        PRODUCT_NAME: J.K Study Test
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: J.K Study Test
+        INFOPLIST_KEY_WKApplication: YES
+        CODE_SIGN_STYLE: Automatic
